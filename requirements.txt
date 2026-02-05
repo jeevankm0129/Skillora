@@ -1,0 +1,12 @@
+python-telegram-bot
+google-genai
+python-dotenv
+SQLAlchemy
+pypdf
+python-docx
+apscheduler
+reportlab
+beautifulsoup4
+aiohttp
+lxml
+python-multipart

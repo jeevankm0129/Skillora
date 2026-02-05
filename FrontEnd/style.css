@@ -1,0 +1,105 @@
+:root {
+    --bg-deep: #05020a;
+    --accent-purple: #7b2cbf;
+    --glow-purple: #9d4edd;
+    --text-main: #f3eaff;
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.12);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body,
+html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--bg-deep);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Background Canvas */
+#particleCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    background: radial-gradient(circle at center, #1a0b2e 0%, #05020a 100%);
+}
+
+/* Frosted Glass Layer */
+.glass-container {
+    position: relative;
+    z-index: 10;
+    width: 90%;
+    max-width: 500px;
+    padding: 3.5rem;
+    background: var(--glass-bg);
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    border-radius: 24px;
+    border: 1px solid var(--glass-border);
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+    color: var(--text-main);
+    user-select: none;
+}
+
+h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    letter-spacing: -2px;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(to bottom, #ffffff, #c8a2f8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+h2 {
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: #b19cd9;
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+}
+
+p {
+    line-height: 1.7;
+    color: rgba(243, 234, 255, 0.7);
+    margin-bottom: 2.5rem;
+    font-size: 1.05rem;
+}
+
+/* Primary CTA */
+.cta-button {
+    display: inline-block;
+    padding: 1.1rem 2.8rem;
+    background: var(--accent-purple);
+    color: white;
+    text-decoration: none;
+    border-radius: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 20px rgba(123, 44, 191, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cta-button:hover {
+    background: var(--glow-purple);
+    box-shadow: 0 0 40px rgba(157, 78, 221, 0.8);
+    transform: scale(1.05);
+}

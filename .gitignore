@@ -1,22 +1,15 @@
-# Gitignore file
-
 # Python
 __pycache__/
 *.pyc
 *.pyo
-*.pyd
-.Python
-env/
-venv/
-pip-selfcheck.json
 
-# Environment
+# Virtual env & secrets
+venv/
 .env
 
-# Database
-*.db
-*.sqlite3
-
-# IDEs
-.idea/
+# VS Code
 .vscode/
+
+# OS junk
+.DS_Store
+Thumbs.db

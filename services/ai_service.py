@@ -1,156 +1,177 @@
 import json
 import logging
-import re
+from typing import Dict, List, Optional
 
-from utils.llm_helper import call_gemini
+from services.job_fetcher import fetch_jobs
+from utils.llm_helper import call_llm
 
 logger = logging.getLogger(__name__)
 
 
-def clean_json_response(response_text: str) -> str:
-    """Helper to extract clean JSON string from LLM response."""
-    if not response_text:
-        return ""
-
-    # Try to find JSON inside ```json ... ``` blocks
-    match = re.search(r"```json\s*(\{.*?\})\s*```", response_text, re.DOTALL)
-    if match:
-        return match.group(1)
-
-    # Try to find JSON inside plain ``` ... ``` blocks
-    match = re.search(r"```\s*(\{.*?\})\s*```", response_text, re.DOTALL)
-    if match:
-        return match.group(1)
-
-    # Fallback: Find first { and last }
-    start = response_text.find("{")
-    end = response_text.rfind("}")
-    if start != -1 and end != -1:
-        return response_text[start : end + 1]
-
-    return response_text
+# =========================
+# Helpers
+# =========================
 
 
-async def extract_skills_from_resume(resume_text: str) -> dict | None:
-    """
-    Extracts structured data from resume text.
-    Returns a dict with 'skills' (list) and 'search_keywords' (list of top 3-5 hard skills).
-    """
-    # Truncate to save tokens (Gemini 1.5 Flash has a large context, but safe limit is good)
-    truncated_text = resume_text[:15000]
-
-    prompt = f"""
-    Analyze the following resume text.
-    1. Extract a comprehensive list of all professional 'skills'.
-    2. Identify the top 3-5 most critical technical 'search_keywords' for finding a relevant job (e.g., "Python", "React", "Data Analysis").
-
-    Return ONLY a valid JSON object. Do not add markdown formatting.
-
-    Structure:
-    {{
-        "skills": ["Skill1", "Skill2", ...],
-        "search_keywords": ["Keyword1", "Keyword2", "Keyword3"]
-    }}
-
-    Resume Text:
-    ---
-    {truncated_text}
-    ---
-    """
-
-    response_text = await call_gemini(prompt)
-    if not response_text:
+def _safe_json_load(raw: Optional[str]) -> Optional[dict]:
+    if not raw:
         return None
-
     try:
-        json_str = clean_json_response(response_text)
-        data = json.loads(json_str)
-        return data
-    except json.JSONDecodeError as e:
-        logger.error(f"Failed to decode skills JSON: {e}")
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        logger.error("LLM returned invalid JSON.")
         return None
 
 
-async def rank_jobs(jobs: list[dict], resume_text: str) -> list[dict]:
-    """
-    Uses AI to rank a list of jobs against the resume.
-    Adds a 'reasoning' field to the relevant jobs.
-    """
+# =========================
+# 1. Skill Extraction
+# =========================
+
+
+async def extract_skills_from_resume(resume_text: str) -> Optional[Dict[str, List[str]]]:
+    prompt = f"""
+You are an expert technical recruiter.
+
+From the resume text below:
+1. Extract ALL professional skills.
+2. Select the top 3–5 HARD SKILLS useful for job search.
+
+Return ONLY valid JSON:
+{{
+  "skills": ["Skill1", "Skill2"],
+  "search_keywords": ["Keyword1", "Keyword2"]
+}}
+
+Resume:
+---
+{resume_text[:12000]}
+---
+"""
+
+    response = await call_llm(prompt)
+    data = _safe_json_load(response)
+
+    if not data:
+        return None
+
+    if not isinstance(data.get("skills"), list):
+        return None
+
+    if not isinstance(data.get("search_keywords"), list):
+        return None
+
+    return {
+        "skills": list(dict.fromkeys(map(str, data["skills"]))),
+        "search_keywords": list(dict.fromkeys(map(str, data["search_keywords"]))),
+    }
+
+
+# =========================
+# 2. Job Ranking
+# =========================
+
+
+async def rank_jobs(jobs: List[dict], resume_text: str) -> List[dict]:
     if not jobs:
         return []
 
-    # Optimize payload: Only send Title, Company, and ID to LLM
-    job_summaries = [
+    job_payload = [
         {"id": i, "title": j["title"], "company": j["company"], "location": j["location"]}
         for i, j in enumerate(jobs)
     ]
 
     prompt = f"""
-    You are a career advisor. Rank the following jobs for a candidate.
+You are a senior career advisor.
 
-    Candidate Resume Summary:
-    {resume_text[:3000]}...
+Candidate resume:
+{resume_text[:3000]}
 
-    Available Jobs:
-    {json.dumps(job_summaries)}
+Jobs:
+{json.dumps(job_payload)}
 
-    Task:
-    1. Select the top 3 matches.
-    2. Provide a short 1-sentence reasoning for each.
+Pick the BEST 3 jobs and explain why.
 
-    Return ONLY JSON:
-    {{
-        "ranked_jobs": [
-            {{ "id": 0, "reasoning": "..." }},
-            {{ "id": 2, "reasoning": "..." }}
-        ]
-    }}
+Return ONLY JSON:
+{{
+  "ranked_jobs": [
+    {{ "id": 0, "reasoning": "..." }}
+  ]
+}}
+"""
+
+    response = await call_llm(prompt)
+    data = _safe_json_load(response)
+
+    if not data or "ranked_jobs" not in data:
+        return []
+
+    ranked = []
+    for item in data["ranked_jobs"]:
+        idx = item.get("id")
+        if isinstance(idx, int) and 0 <= idx < len(jobs):
+            job = jobs[idx]
+            job["reasoning"] = str(item.get("reasoning", "AI matched"))
+            ranked.append(job)
+
+    return ranked
+
+
+# =========================
+# 3. ✅ MISSING FUNCTION (FIXED)
+# =========================
+
+
+async def get_job_recommendations(
+    skills: List[str],
+    resume_text: str,
+) -> List[dict]:
+    """
+    FULL AI FLOW:
+    1. Fetch jobs from scrapers
+    2. Rank them using LLM reasoning
     """
 
-    response_text = await call_gemini(prompt)
-    if not response_text:
-        return jobs[:3]  # Fallback: return top 3 unranked
+    if not skills:
+        logger.warning("No skills provided for job recommendations.")
+        return []
 
-    ranked_results = []
-    try:
-        json_str = clean_json_response(response_text)
-        data = json.loads(json_str)
-        ranked_items = data.get("ranked_jobs", [])
+    # 1. Fetch raw jobs
+    jobs = await fetch_jobs(skills)
+    if not jobs:
+        return []
 
-        for item in ranked_items:
-            idx = item.get("id")
-            if idx is not None and isinstance(idx, int) and 0 <= idx < len(jobs):
-                job = jobs[idx]
-                job["reasoning"] = item.get("reasoning", "AI Matched")
-                ranked_results.append(job)
-
-    except Exception as e:
-        logger.error(f"Error ranking jobs: {e}")
-        return jobs[:3]
-
-    return ranked_results
+    # 2. Rank using AI
+    ranked_jobs = await rank_jobs(jobs, resume_text)
+    return ranked_jobs
 
 
-async def tailor_resume(base_resume_text: str, job_description: str) -> str | None:
-    """Rewrites a resume to match a specific job description."""
+# =========================
+# 4. Resume Tailoring
+# =========================
+
+
+async def tailor_resume(base_resume_text: str, job_description: str) -> Optional[str]:
     prompt = f"""
-    You are an expert Resume Writer.
-    Rewrite the Base Resume to highlight skills relevant to the Target Job.
+You are a professional resume writer.
 
-    - Keep factual history (dates, companies) unchanged.
-    - Optimize the Summary and Bullet points.
-    - Use Markdown formatting (**Bold** for headers).
+Rules:
+- Do NOT invent experience
+- Do NOT change dates or companies
+- Emphasize relevance only
+- Use Markdown headers
 
-    Base Resume:
-    ---
-    {base_resume_text[:5000]}
-    ---
+Base Resume:
+---
+{base_resume_text[:5000]}
+---
 
-    Target Job:
-    ---
-    {job_description[:3000]}
-    ---
+Target Job:
+---
+{job_description[:3000]}
+---
 
-    Return only the resume text.
-    """
-    return await call_gemini(prompt)
+Return ONLY the rewritten resume.
+"""
+
+    response = await call_llm(prompt)
+    return response.strip() if response else None

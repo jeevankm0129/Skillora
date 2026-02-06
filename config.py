@@ -1,31 +1,61 @@
 import os
-import logging
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# ===============================
+# ENVIRONMENT
+# ===============================
 
-# Configure Logging
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=getattr(logging, LOG_LEVEL)
-)
-logger = logging.getLogger(__name__)
+ENV = os.getenv("ENV", "development")
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
-# --- CONFIG VARIABLES ---
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
+# ===============================
+# DATABASE
+# ===============================
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is required but not set.")
+
+
+# ===============================
+# LLM / AI CONFIG
+# ===============================
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL")  # Optional (local/self-hosted)
+
+AI_ENABLED = bool(OPENAI_API_KEY)
+
+if not AI_ENABLED:
+    raise RuntimeError("OPENAI_API_KEY is missing. AI features cannot start.")
+
+
+# ===============================
+# EMAIL
+# ===============================
+
+SMTP_SERVER = os.getenv("SMTP_SERVER")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_EMAIL = os.getenv("SMTP_EMAIL")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
-SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///jobs.db")
+EMAIL_ENABLED = all([SMTP_SERVER, SMTP_EMAIL, SMTP_PASSWORD])
 
-# --- VALIDATION ---
-if not TELEGRAM_BOT_TOKEN:
-    logger.critical("TELEGRAM_BOT_TOKEN is missing in .env! Bot cannot start.")
-if not GEMINI_API_KEY:
-    logger.warning("GEMINI_API_KEY is missing! AI features will fail.")
+
+# ===============================
+# TELEGRAM
+# ===============================
+
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+
+
+# ===============================
+# FEATURE FLAGS
+# ===============================
+
+ENABLE_EMAIL_NOTIFICATIONS = os.getenv("ENABLE_EMAIL_NOTIFICATIONS", "true").lower() == "true"
+
+ENABLE_BACKGROUND_JOB_MATCHING = (
+    os.getenv("ENABLE_BACKGROUND_JOB_MATCHING", "true").lower() == "true"
+)

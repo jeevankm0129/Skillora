@@ -1,46 +1,79 @@
 import logging
+import os
+from typing import Optional
 
-import google.generativeai as genai
-
-from config import GEMINI_API_KEY
+from openai import AsyncOpenAI
 
 logger = logging.getLogger(__name__)
 
-model = None
+# =========================
+# Configuration
+# =========================
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
+_client: Optional[AsyncOpenAI] = None
 
 
-def configure_gemini():
-    """Initializes the Gemini model safely."""
-    global model
-    if not GEMINI_API_KEY:
-        logger.warning("GEMINI_API_KEY is missing. AI features will be disabled.")
-        return
-
-    try:
-        genai.configure(api_key=GEMINI_API_KEY)
-        # Using the latest stable Flash model for speed and cost
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        logger.info("Gemini AI successfully configured.")
-    except Exception as e:
-        logger.error(f"Failed to configure Gemini AI: {e}")
-
-
-# Initialize on import
-configure_gemini()
-
-
-async def call_gemini(prompt: str) -> str | None:
+def _init_client() -> None:
     """
-    Sends a prompt to Gemini and returns the text response.
-    Returns None if the call fails.
+    Initialize the OpenAI-compatible async client.
+    Fail FAST if misconfigured.
     """
-    if not model:
-        logger.error("Attempted to call Gemini, but model is not initialized.")
+    global _client
+
+    if not OPENAI_API_KEY:
+        raise RuntimeError(
+            "OPENAI_API_KEY is missing. " "AI features cannot start without a valid LLM provider."
+        )
+
+    _client = AsyncOpenAI(
+        api_key=OPENAI_API_KEY,
+        base_url=OPENAI_BASE_URL,
+        timeout=60,
+    )
+
+    logger.info(f"LLM initialized | model={OPENAI_MODEL} | base_url={OPENAI_BASE_URL}")
+
+
+# Initialize immediately (fail-fast on startup)
+_init_client()
+
+
+# =========================
+# Public API
+# =========================
+
+
+async def call_llm(prompt: str) -> Optional[str]:
+    """
+    Central LLM call used by the entire system.
+
+    Rules:
+    - NO business logic here
+    - NO prompt formatting assumptions
+    - Returns raw text or None
+    """
+
+    if not _client:
+        logger.error("LLM client not initialized.")
         return None
 
     try:
-        response = await model.generate_content_async(prompt)
-        return response.text
+        response = await _client.chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=[
+                {"role": "system", "content": "You are a precise, structured AI assistant."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.2,
+        )
+
+        content = response.choices[0].message.content
+        return content.strip() if content else None
+
     except Exception as e:
-        logger.error(f"Gemini API Error: {e}")
+        logger.error(f"LLM call failed: {e}")
         return None

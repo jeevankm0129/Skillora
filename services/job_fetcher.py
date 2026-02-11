@@ -1,42 +1,37 @@
-import asyncio
-import logging
+from typing import Dict, List
 
-from scrapers.naukri_scraper import search_naukri
-
-# from scrapers.linkedin_scraper import search_linkedin # Future use
-
-logger = logging.getLogger(__name__)
+from scrapers.naukri_scraper import NaukriScraper
 
 
-async def fetch_jobs(keywords: list[str]) -> list[dict]:
+def fetch_jobs_from_sources(keywords: List[str], limit: int = 20) -> List[Dict]:
     """
-    Fetches jobs from all connected sources concurrently.
-    Deduplicates results based on Link.
+    Fetch raw jobs from all enabled scrapers.
     """
-    if not keywords:
-        logger.warning("Job fetch called with empty keywords.")
-        return []
+    scrapers = [
+        NaukriScraper(),
+    ]
 
-    logger.info(f"Fetching jobs for keywords: {keywords}")
+    all_jobs: List[Dict] = []
 
-    # Run scrapers in parallel
-    results = await asyncio.gather(
-        search_naukri(keywords),
-        # search_linkedin(keywords),
-        return_exceptions=True,
-    )
+    for scraper in scrapers:
+        try:
+            jobs = scraper.fetch_jobs(keywords, limit)
+            all_jobs.extend(jobs)
+        except Exception:
+            continue  # isolate scraper failures
 
-    all_jobs = []
-    seen_links = set()
+    return deduplicate_jobs(all_jobs)
 
-    for res in results:
-        if isinstance(res, list):
-            for job in res:
-                if job["link"] not in seen_links:
-                    all_jobs.append(job)
-                    seen_links.add(job["link"])
-        else:
-            logger.error(f"Scraper error: {res}")
 
-    logger.info(f"Total unique jobs found: {len(all_jobs)}")
-    return all_jobs
+def deduplicate_jobs(jobs: List[Dict]) -> List[Dict]:
+    seen = set()
+    unique = []
+
+    for job in jobs:
+        key = (job.get("title"), job.get("company"), job.get("link"))
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(job)
+
+    return unique

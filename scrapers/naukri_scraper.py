@@ -1,91 +1,44 @@
-import asyncio
-import logging
-import urllib.parse
+from typing import Dict, List
 
-import aiohttp
-from bs4 import BeautifulSoup
+import requests
 
-from .base_scraper import BaseScraper
-
-logger = logging.getLogger(__name__)
+from scrapers.base_scraper import BaseScraper
 
 
 class NaukriScraper(BaseScraper):
-    """Scraper for Naukri.com using Async I/O."""
+    source_name = "Naukri"
 
-    BASE_URL = "https://www.naukri.com/"
+    def fetch_jobs(self, keywords: List[str], limit: int = 10) -> List[Dict]:
+        jobs: List[Dict] = []
 
-    async def search(self, keywords: list[str]) -> list[dict]:
-        """Searches Naukri for jobs matching the keywords asynchronously."""
-        if not keywords:
-            return []
-
-        search_query = "-".join([k.replace(" ", "-") for k in keywords])
-        formatted_query = urllib.parse.quote(search_query)
-        # Naukri URL structure for keyword search
-        search_url = f"{self.BASE_URL}{formatted_query}-jobs"
-
-        jobs = []
+        query = " ".join(keywords)
+        url = "https://www.naukri.com/jobapi/v3/search"
+        params = {
+            "keyword": query,
+            "noOfResults": limit,
+        }
 
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.5",
-            "Referer": "https://www.google.com/",
+            "User-Agent": "Mozilla/5.0",
+            "Accept": "application/json",
         }
 
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(search_url, headers=headers, timeout=10) as response:
-                    if response.status != 200:
-                        logger.warning(f"Naukri returned status {response.status}")
-                        return []
+            resp = requests.get(url, params=params, headers=headers, timeout=10)
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception:
+            return jobs  # fail safely
 
-                    html = await response.text()
-                    soup = BeautifulSoup(html, "html.parser")
-
-                    # Robust finding of job containers
-                    job_listings = soup.find_all("div", class_="srp-jobtuple-wrapper")
-
-                    for job in job_listings:
-                        try:
-                            title_elem = job.find("a", class_="title")
-                            company_elem = job.find("a", class_="subTitle")
-                            loc_elem = job.find("span", class_="locWdth")
-
-                            # FIX: Check if title exists first
-                            if not title_elem:
-                                continue
-
-                            title = title_elem.text.strip()
-                            link = title_elem.get("href")
-
-                            # Check if we actually got a link
-                            if not link:
-                                continue
-
-                            company = company_elem.text.strip() if company_elem else "Unknown"
-                            location = loc_elem.text.strip() if loc_elem else "Remote/Unknown"
-
-                            jobs.append(
-                                {
-                                    "title": title,
-                                    "company": company,
-                                    "location": location,
-                                    "link": link,
-                                    "source": "Naukri",
-                                }
-                            )
-                        except AttributeError:
-                            continue
-
-        except Exception as e:
-            logger.error(f"Error scraping Naukri: {e}")
+        for item in data.get("jobDetails", []):
+            jobs.append(
+                {
+                    "title": item.get("title", "").strip(),
+                    "company": item.get("companyName", "").strip(),
+                    "location": item.get("location", "").strip(),
+                    "link": item.get("jdURL", "").strip(),
+                    "source": self.source_name,
+                }
+            )
 
         return jobs
-
-
-async def search_naukri(keywords: list[str]) -> list[dict]:
-    """Helper function to run the scraper."""
-    scraper = NaukriScraper()
-    return await scraper.search(keywords)

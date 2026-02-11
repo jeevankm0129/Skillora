@@ -1,13 +1,15 @@
 import json
 import logging
 import os
+from asyncio import create_task
+from typing import cast
 
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
+from telegram import Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
+from telegram import User as TelegramUser
 from telegram.ext import ContextTypes, ConversationHandler
 
 import database.crud as crud
 from database.db import SessionLocal
-from database.models import User
 from services.ai_service import (
     extract_skills_from_resume,
     get_job_recommendations,
@@ -23,28 +25,28 @@ CHOOSING, RESUME_UPLOAD, JOB_DESC_UPLOAD = range(3)
 
 
 # =========================
-# START COMMAND (FIXED)
+# START
 # =========================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Starts the conversation and registers the user."""
-    user = update.effective_user
+    tg_user = cast(TelegramUser, update.effective_user)
+    message = cast(Message, update.message)
 
     db = SessionLocal()
     try:
-        db_user = crud.get_user_by_telegram_id(db, user.id)
+        db_user = crud.get_user_by_telegram_id(db, tg_user.id)
         if not db_user:
-            crud.create_user(db, telegram_id=user.id)
-            logger.info(f"New user registered: {user.id}")
-    except Exception as e:
-        logger.error(f"DB Error in start: {e}")
+            crud.create_user(db, telegram_id=tg_user.id)
+            logger.info(f"New user registered: {tg_user.id}")
     finally:
         db.close()
 
     reply_keyboard = [["Job Recommendations", "Resume Building"]]
-    await update.message.reply_text(
-        f"Hi {user.first_name}! I am your AI Career Assistant.\n\nHow can I help you today?",
+    await message.reply_text(
+        f"Hi {tg_user.first_name}! 👋\n\nHow can I help you today?",
         reply_markup=ReplyKeyboardMarkup(
-            reply_keyboard, one_time_keyboard=True, resize_keyboard=True
+            reply_keyboard,
+            one_time_keyboard=True,
+            resize_keyboard=True,
         ),
     )
     return CHOOSING
@@ -54,85 +56,85 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 # JOB RECOMMENDATION FLOW
 # =========================
 async def ask_for_resume(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    await update.message.reply_text(
-        "Please upload your current resume (PDF or DOCX).",
+    message = cast(Message, update.message)
+    await message.reply_text(
+        "Please upload your resume (PDF or DOCX).",
         reply_markup=ReplyKeyboardRemove(),
     )
     return RESUME_UPLOAD
 
 
 async def handle_resume_file(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    user = update.effective_user
-    document = update.message.document
+    tg_user = cast(TelegramUser, update.effective_user)
+    message = cast(Message, update.message)
 
+    document = message.document
     if not document:
-        await update.message.reply_text("Please upload a valid document file.")
+        await message.reply_text("Please upload a valid document file.")
         return RESUME_UPLOAD
 
-    file_ext = document.file_name.split(".")[-1].lower()
+    file_name = document.file_name
+    if not file_name:
+        await message.reply_text("Uploaded file has no filename. Please try again.")
+        return RESUME_UPLOAD
+
+    file_ext = file_name.split(".")[-1].lower()
     if file_ext not in ["pdf", "docx"]:
-        await update.message.reply_text("Only PDF and DOCX are supported.")
+        await message.reply_text("Only PDF and DOCX files are supported.")
         return RESUME_UPLOAD
 
-    temp_filename = f"temp_{user.id}_{document.file_name}"
+    temp_filename = f"temp_{tg_user.id}_{file_name}"
 
     try:
         file = await context.bot.get_file(document.file_id)
         await file.download_to_drive(temp_filename)
 
-        await update.message.reply_text("Reading resume... 🔍")
+        await message.reply_text("📄 Reading your resume…")
 
         resume_text = parse_resume(temp_filename)
         if not resume_text or len(resume_text) < 50:
-            await update.message.reply_text(
-                "I couldn't read enough text from this file. Please upload a text-based resume."
+            await message.reply_text(
+                "I couldn't read enough text from this resume. Please upload a text-based file."
             )
             return RESUME_UPLOAD
 
-        await update.message.reply_text("Analyzing skills... 🧠")
-        extracted = await extract_skills_from_resume(resume_text)
-        if not extracted:
-            await update.message.reply_text("AI analysis failed. Please try again later.")
-            return ConversationHandler.END
-
-        skills = extracted["skills"]
-
+        # Save resume immediately
         db = SessionLocal()
         try:
-            db_user = crud.get_user_by_telegram_id(db, user.id)
+            db_user = crud.get_user_by_telegram_id(db, tg_user.id)
             if db_user:
-                crud.save_resume(
-                    db,
-                    db_user.id,
-                    resume_text,
-                    parsed_json=json.dumps(extracted),
-                )
-                crud.link_skills_to_user(db, db_user.id, skills)
+                crud.save_resume(db, db_user.id, resume_text)
         finally:
             db.close()
 
-        await update.message.reply_text(
-            f"Found skills: {', '.join(skills[:5])}...\nSearching for jobs... 🌍"
+        # Store data for background task
+        create_task(
+            process_resume_background(
+                chat_id=message.chat_id,
+                resume_text=resume_text,
+                context=context,
+            )
         )
 
-        ranked_jobs = await get_job_recommendations(skills, resume_text)
-        if not ranked_jobs:
-            await update.message.reply_text("No jobs found right now.")
-            return ConversationHandler.END
+        # Instant reply (FAST-NOW)
+        await message.reply_text(
+            "✅ Resume received!\n"
+            "🔍 Finding the best job matches for you…\n"
+            "⏳ This may take ~15–20 seconds."
+        )
 
-        for job in ranked_jobs[:3]:
-            text = (
-                f"🚀 *{job['title']}*\n"
-                f"🏢 {job['company']}\n"
-                f"📍 {job['location']}\n"
-                f"💡 _{job.get('reasoning', '')}_\n"
-                f"🔗 [Apply Here]({job['link']})"
+        # Run heavy AI in background
+        create_task(
+            process_resume_background(
+                chat_id=message.chat_id,
+                resume_text=resume_text,
+                context=context,
             )
-            await update.message.reply_text(text, parse_mode="Markdown")
+        )
 
     except Exception as e:
-        logger.error(f"Error handling resume: {e}")
-        await update.message.reply_text("An internal error occurred.")
+        logger.error(f"Error handling resume upload: {e}")
+        await message.reply_text("An internal error occurred.")
     finally:
         if os.path.exists(temp_filename):
             os.remove(temp_filename)
@@ -141,10 +143,57 @@ async def handle_resume_file(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 # =========================
+# BACKGROUND JOB PROCESSING
+# =========================
+async def process_resume_background(
+    chat_id: int,
+    resume_text: str,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    try:
+        # 1. Extract skills (slow but safe)
+        extracted = await extract_skills_from_resume(resume_text)
+        skills = extracted.get("skills", [])[:5]
+
+        if not skills:
+            await context.bot.send_message(chat_id, "Could not extract skills from your resume.")
+            return
+
+        # 2. Fetch + rank jobs
+        jobs = await get_job_recommendations(skills, resume_text)
+
+        if not jobs:
+            await context.bot.send_message(chat_id, "No suitable jobs found right now.")
+            return
+
+        # 3. Send results
+        msg = "🚀 *Top Job Matches for You:*\n\n"
+        for job in jobs[:3]:
+            msg += (
+                f"*{job['title']}*\n"
+                f"{job['company']} — {job['location']}\n"
+                f"[Apply Here]({job['link']})\n\n"
+            )
+
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=msg,
+            parse_mode="Markdown",
+        )
+
+    except Exception as e:
+        logger.error(f"Background resume processing failed: {e}")
+        await context.bot.send_message(
+            chat_id, "❌ Something went wrong while processing your resume."
+        )
+
+
+# =========================
 # RESUME BUILDING FLOW
 # =========================
 async def ask_for_job_description(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    await update.message.reply_text(
+    message = cast(Message, update.message)
+    await message.reply_text(
         "Please paste the job description you are targeting.",
         reply_markup=ReplyKeyboardRemove(),
     )
@@ -152,37 +201,37 @@ async def ask_for_job_description(update: Update, context: ContextTypes.DEFAULT_
 
 
 async def handle_job_description(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    user = update.effective_user
-    job_desc = update.message.text
+    tg_user = cast(TelegramUser, update.effective_user)
+    message = cast(Message, update.message)
 
+    job_desc = message.text
     if not job_desc or len(job_desc) < 10:
-        await update.message.reply_text("Please paste a full job description.")
+        await message.reply_text("Please paste a full job description.")
         return JOB_DESC_UPLOAD
 
     db = SessionLocal()
     try:
-        db_user = crud.get_user_by_telegram_id(db, user.id)
+        db_user = crud.get_user_by_telegram_id(db, tg_user.id)
         if not db_user or not db_user.resume:
-            await update.message.reply_text(
-                "Please upload your resume first using Job Recommendations."
-            )
+            await message.reply_text("Please upload your resume first.")
             return ConversationHandler.END
+
         base_resume = db_user.resume.text_content
     finally:
         db.close()
 
     new_resume = await tailor_resume(base_resume, job_desc)
     if not new_resume:
-        await update.message.reply_text("Failed to generate resume.")
+        await message.reply_text("Failed to generate resume.")
         return ConversationHandler.END
 
-    output_file = f"Tailored_Resume_{user.id}.pdf"
+    output_file = f"Tailored_Resume_{tg_user.id}.pdf"
     if generate_pdf_resume(new_resume, output_file):
         with open(output_file, "rb") as f:
-            await update.message.reply_document(f)
+            await message.reply_document(f)
         os.remove(output_file)
     else:
-        await update.message.reply_text("PDF generation failed.")
+        await message.reply_text("PDF generation failed.")
 
     return ConversationHandler.END
 
@@ -191,5 +240,9 @@ async def handle_job_description(update: Update, context: ContextTypes.DEFAULT_T
 # CANCEL
 # =========================
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    await update.message.reply_text("Operation cancelled.", reply_markup=ReplyKeyboardRemove())
+    message = cast(Message, update.message)
+    await message.reply_text(
+        "Operation cancelled.",
+        reply_markup=ReplyKeyboardRemove(),
+    )
     return ConversationHandler.END

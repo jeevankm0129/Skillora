@@ -4,7 +4,7 @@ from sqlalchemy import Column  # Required for Table definitions
 from sqlalchemy import BigInteger, Boolean, ForeignKey, Integer, String, Table, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-from database.database import Base
+from database.db import Base
 
 # Many-to-Many: Users <-> Skills
 # FIX: Use standard 'Column' for Table definitions, not 'mapped_column'

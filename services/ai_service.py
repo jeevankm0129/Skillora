@@ -1,177 +1,110 @@
 import json
-import logging
-from typing import Dict, List, Optional
+from typing import Dict, List
 
-from services.job_fetcher import fetch_jobs
+from services.job_fetcher import fetch_jobs_from_sources
 from utils.llm_helper import call_llm
 
-logger = logging.getLogger(__name__)
 
-
-# =========================
-# Helpers
-# =========================
-
-
-def _safe_json_load(raw: Optional[str]) -> Optional[dict]:
-    if not raw:
-        return None
-    try:
-        return json.loads(raw)
-    except json.JSONDecodeError:
-        logger.error("LLM returned invalid JSON.")
-        return None
-
-
-# =========================
-# 1. Skill Extraction
-# =========================
-
-
-async def extract_skills_from_resume(resume_text: str) -> Optional[Dict[str, List[str]]]:
+# ---------------------------
+# SKILL EXTRACTION
+# ---------------------------
+async def extract_skills_from_resume(resume_text: str) -> Dict:
     prompt = f"""
-You are an expert technical recruiter.
+You are an expert resume analyzer.
 
-From the resume text below:
-1. Extract ALL professional skills.
-2. Select the top 3–5 HARD SKILLS useful for job search.
+Extract:
+- core technical skills
+- roles
+- seniority
 
-Return ONLY valid JSON:
+Return STRICT JSON:
 {{
-  "skills": ["Skill1", "Skill2"],
-  "search_keywords": ["Keyword1", "Keyword2"]
+  "skills": [string],
+  "roles": [string],
+  "seniority": "junior | mid | senior"
 }}
 
 Resume:
----
-{resume_text[:12000]}
----
+{resume_text}
 """
 
-    response = await call_llm(prompt)
-    data = _safe_json_load(response)
-
-    if not data:
-        return None
-
-    if not isinstance(data.get("skills"), list):
-        return None
-
-    if not isinstance(data.get("search_keywords"), list):
-        return None
-
-    return {
-        "skills": list(dict.fromkeys(map(str, data["skills"]))),
-        "search_keywords": list(dict.fromkeys(map(str, data["search_keywords"]))),
-    }
+    response = await call_llm(prompt, expect_json=True)
+    return response
 
 
-# =========================
-# 2. Job Ranking
-# =========================
-
-
-async def rank_jobs(jobs: List[dict], resume_text: str) -> List[dict]:
-    if not jobs:
-        return []
-
-    job_payload = [
-        {"id": i, "title": j["title"], "company": j["company"], "location": j["location"]}
-        for i, j in enumerate(jobs)
-    ]
-
-    prompt = f"""
-You are a senior career advisor.
-
-Candidate resume:
-{resume_text[:3000]}
-
-Jobs:
-{json.dumps(job_payload)}
-
-Pick the BEST 3 jobs and explain why.
-
-Return ONLY JSON:
-{{
-  "ranked_jobs": [
-    {{ "id": 0, "reasoning": "..." }}
-  ]
-}}
-"""
-
-    response = await call_llm(prompt)
-    data = _safe_json_load(response)
-
-    if not data or "ranked_jobs" not in data:
-        return []
-
-    ranked = []
-    for item in data["ranked_jobs"]:
-        idx = item.get("id")
-        if isinstance(idx, int) and 0 <= idx < len(jobs):
-            job = jobs[idx]
-            job["reasoning"] = str(item.get("reasoning", "AI matched"))
-            ranked.append(job)
-
-    return ranked
-
-
-# =========================
-# 3. ✅ MISSING FUNCTION (FIXED)
-# =========================
-
-
-async def get_job_recommendations(
-    skills: List[str],
-    resume_text: str,
-) -> List[dict]:
+# ---------------------------
+# JOB RECOMMENDATION (REAL AI)
+# ---------------------------
+async def get_job_recommendations(skills: list, resume_text: str):
     """
-    FULL AI FLOW:
-    1. Fetch jobs from scrapers
-    2. Rank them using LLM reasoning
+    FAST + BALANCED job recommendations using local LLM.
     """
+
+    # 1. If skills not provided, extract ONCE
+    if not skills:
+        data = await extract_skills_from_resume(resume_text)
+        skills = data.get("skills", [])[:5]  # cap skills
 
     if not skills:
-        logger.warning("No skills provided for job recommendations.")
         return []
 
-    # 1. Fetch raw jobs
-    jobs = await fetch_jobs(skills)
-    if not jobs:
+    # 2. Fetch FEW jobs only
+    raw_jobs = fetch_jobs_from_sources(skills, limit=6)
+    if not raw_jobs:
         return []
 
-    # 2. Rank using AI
-    ranked_jobs = await rank_jobs(jobs, resume_text)
-    return ranked_jobs
-
-
-# =========================
-# 4. Resume Tailoring
-# =========================
-
-
-async def tailor_resume(base_resume_text: str, job_description: str) -> Optional[str]:
+    # 3. VERY SHORT ranking prompt
     prompt = f"""
-You are a professional resume writer.
+Rank these jobs for a candidate with skills: {', '.join(skills)}.
 
-Rules:
-- Do NOT invent experience
-- Do NOT change dates or companies
-- Emphasize relevance only
-- Use Markdown headers
+Return JSON ONLY:
+[
+  {{
+    "title": str,
+    "company": str,
+    "location": str,
+    "link": str,
+    "source": str,
+    "score": int
+  }}
+]
 
-Base Resume:
----
-{base_resume_text[:5000]}
----
-
-Target Job:
----
-{job_description[:3000]}
----
-
-Return ONLY the rewritten resume.
+Jobs:
+{raw_jobs}
 """
 
-    response = await call_llm(prompt)
-    return response.strip() if response else None
+    ranked = await call_llm(prompt, expect_json=True)
+
+    return sorted(ranked, key=lambda x: x.get("score", 0), reverse=True)
+
+
+# ---------------------------
+# RESUME TAILORING
+# ---------------------------
+async def tailor_resume(resume_text: str, job_description: str) -> str:
+    prompt = f"""
+You are an expert resume writer.
+
+Rewrite the resume to strongly match the job description.
+Do NOT add fake experience.
+
+Resume:
+{resume_text}
+
+Job Description:
+{job_description}
+"""
+
+    return await call_llm(prompt)
+
+
+async def rank_jobs(resume_text: str, jobs: list) -> list:
+    """
+    Backward compatibility wrapper for notification_service.
+    """
+    # Reuse existing AI ranking logic
+    skills_data = await extract_skills_from_resume(resume_text)
+    skills = skills_data.get("skills", [])
+
+    ranked_jobs = await get_job_recommendations(skills, resume_text)
+    return ranked_jobs

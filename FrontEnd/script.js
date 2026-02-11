@@ -29,20 +29,19 @@ const CONFIG = {
 
     // MIND FLAYER PALETTE (Red, Ash, Shadow)
     colors: [
-        '#ff0000', // Bright Red (Lightning/Ember)
-        '#8b0000', // Dark Red (Blood)
-        '#2e2e2e', // Dark Ash
-        '#4f4f4f', // Grey Smoke
-        '#1a1a1a', // Deep Shadow
-        '#ffffff'  // Rare White Spark
+        'rgba(75, 0, 130, ',   // Indigo
+        'rgba(138, 43, 226, ', // Blue Violet
+        'rgba(72, 61, 139, ',  // Dark Slate Blue
+        'rgba(147, 112, 219, ', // Medium Purple
+        'rgba(25, 25, 112, '   // Midnight Blue
     ],
 
-    minSize: 0.5,
-    maxSize: 1, // Kept small for "Ash" look
+    minSize: 1.5,
+    maxSize: 2.5, // Kept small for "Ash" look
 
-    baseSpeed: 0.5,
+    baseSpeed: 0.3,
     hoverRepelRadius: 100,
-    clickRippleRadius: 120
+    clickRippleRadius: 200
 };
 
 function resize() {

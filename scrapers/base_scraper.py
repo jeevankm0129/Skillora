@@ -1,19 +1,22 @@
 from abc import ABC, abstractmethod
+from typing import Dict, List
 
 
 class BaseScraper(ABC):
     """Abstract base class for all job scrapers."""
 
+    source_name: str = "unknown"
+
     @abstractmethod
-    async def search(self, keywords: list[str]) -> list[dict]:
+    def fetch_jobs(self, keywords: List[str], limit: int = 10) -> List[Dict]:
         """
-        Searches for jobs based on a list of keywords.
+        Fetch jobs for given keywords.
 
-        Args:
-            keywords: A list of search terms.
-
-        Returns:
-            A list of dictionaries, where each dictionary represents a job posting.
-            Required keys: 'title', 'company', 'location', 'link', 'source'.
+        MUST return a list of dicts with keys:
+        - title (str)
+        - company (str)
+        - location (str)
+        - link (str)
+        - source (str)
         """
-        pass
+        raise NotImplementedError

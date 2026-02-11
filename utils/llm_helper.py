@@ -1,79 +1,42 @@
-import logging
-import os
-from typing import Optional
+import json
 
-from openai import AsyncOpenAI
+import requests
 
-logger = logging.getLogger(__name__)
-
-# =========================
-# Configuration
-# =========================
-
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-
-_client: Optional[AsyncOpenAI] = None
+OLLAMA_URL = "http://localhost:11434/api/generate"
+OLLAMA_MODEL = "mistral"
 
 
-def _init_client() -> None:
+async def call_llm(prompt: str, expect_json: bool = False):
     """
-    Initialize the OpenAI-compatible async client.
-    Fail FAST if misconfigured.
-    """
-    global _client
-
-    if not OPENAI_API_KEY:
-        raise RuntimeError(
-            "OPENAI_API_KEY is missing. " "AI features cannot start without a valid LLM provider."
-        )
-
-    _client = AsyncOpenAI(
-        api_key=OPENAI_API_KEY,
-        base_url=OPENAI_BASE_URL,
-        timeout=60,
-    )
-
-    logger.info(f"LLM initialized | model={OPENAI_MODEL} | base_url={OPENAI_BASE_URL}")
-
-
-# Initialize immediately (fail-fast on startup)
-_init_client()
-
-
-# =========================
-# Public API
-# =========================
-
-
-async def call_llm(prompt: str) -> Optional[str]:
-    """
-    Central LLM call used by the entire system.
-
-    Rules:
-    - NO business logic here
-    - NO prompt formatting assumptions
-    - Returns raw text or None
+    Calls Ollama local LLM.
+    Works as a drop-in replacement for OpenAI.
     """
 
-    if not _client:
-        logger.error("LLM client not initialized.")
-        return None
+    payload = {
+        "model": OLLAMA_MODEL,
+        "prompt": prompt,
+        "stream": False,
+        "options": {
+            "temperature": 0.2,
+        },
+    }
 
     try:
-        response = await _client.chat.completions.create(
-            model=OPENAI_MODEL,
-            messages=[
-                {"role": "system", "content": "You are a precise, structured AI assistant."},
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0.2,
-        )
-
-        content = response.choices[0].message.content
-        return content.strip() if content else None
-
+        response = requests.post(OLLAMA_URL, json=payload, timeout=120)
+        response.raise_for_status()
     except Exception as e:
-        logger.error(f"LLM call failed: {e}")
-        return None
+        raise RuntimeError(f"Ollama request failed: {e}")
+
+    data = response.json()
+    output = data.get("response", "").strip()
+
+    if not output:
+        raise ValueError("Ollama returned empty response")
+
+    if expect_json:
+        try:
+            return json.loads(output)
+        except json.JSONDecodeError:
+            raise ValueError(f"Ollama did not return valid JSON.\nOutput:\n{output}")
+
+    return output

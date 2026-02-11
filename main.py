@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from telegram.ext import (
@@ -9,7 +10,6 @@ from telegram.ext import (
 )
 
 # Bot Handlers
-from bot.telegram_bot import handle_resume_file  # ✅ FIXED NAME
 from bot.telegram_bot import (
     CHOOSING,
     JOB_DESC_UPLOAD,
@@ -18,6 +18,7 @@ from bot.telegram_bot import (
     ask_for_resume,
     cancel,
     handle_job_description,
+    handle_resume_file,
     start,
 )
 
@@ -25,7 +26,7 @@ from bot.telegram_bot import (
 from config import ENABLE_BACKGROUND_JOB_MATCHING, TELEGRAM_BOT_TOKEN
 
 # Database
-from database.db import Base, engine  # ✅ FIXED IMPORT
+from database.db import Base, engine
 
 # Services
 from services.notification_service import schedule_job_checks
@@ -46,19 +47,20 @@ def main():
     Base.metadata.create_all(bind=engine)
     logger.info("Database ready.")
 
-    # 2. Start Background Scheduler (if enabled)
-    if ENABLE_BACKGROUND_JOB_MATCHING:
-        logger.info("Starting background job scheduler...")
-        schedule_job_checks()
-    else:
-        logger.info("Background job scheduler disabled by config.")
-
-    # 3. Start Telegram Bot
+    # 2. Start Telegram Bot
     if not TELEGRAM_BOT_TOKEN:
         logger.critical("TELEGRAM_BOT_TOKEN is missing. Exiting.")
         return
 
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+
+    # 3. Start Background Scheduler (AFTER event loop exists)
+    if ENABLE_BACKGROUND_JOB_MATCHING:
+        logger.info("Starting background job scheduler...")
+        loop = asyncio.get_event_loop()
+        schedule_job_checks(loop)
+    else:
+        logger.info("Background job scheduler disabled by config.")
 
     # 4. Conversation Handler
     conv_handler = ConversationHandler(

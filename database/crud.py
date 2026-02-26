@@ -18,7 +18,7 @@ def create_user(db: Session, telegram_id: int):
 def update_user_email(db: Session, telegram_id: int, email: str):
     user = get_user_by_telegram_id(db, telegram_id)
     if user:
-        user.email = email
+        user.email = email.strip()
         user.notify_by_email = True
         db.commit()
         db.refresh(user)
@@ -47,7 +47,9 @@ def get_or_create_skill(db: Session, skill_name: str):
     if not skill_name:
         return None
 
-    skill_name = skill_name.strip().title()
+    skill_name = " ".join(skill_name.strip().split())
+    if not skill_name:
+        return None
 
     skill = db.query(models.Skill).filter(models.Skill.name == skill_name).first()
 

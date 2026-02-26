@@ -1,0 +1,48 @@
+Postman
+Charles Proxy
+Android Studio
+Xcode
+BrowserStack
+Jira
+Confluence
+TestRail
+Jenkins
+Git
+Bitbucket
+SQL
+GraphQL
+Swagger
+SoapUI
+DevTools
+Selenium
+Selenium WebDriver
+Appium
+Software Development
+Object Oriented Programming
+Data Structures and Algorithms
+DSA
+Backend
+Development
+API Development
+RESTful API Design
+Database Design
+SQL Querying
+Version Control
+Debugging
+Performance Optimization
+Unit & Integration Testing
+Agile Methodology
+Collaboration
+Azure DevOps
+Kibana
+Sentry
+TestLink
+qTest
+Qase
+X-Ray
+HP ALM
+REST
+API Testing
+Manual Testing
+Mobile Testing
+Integration Testing

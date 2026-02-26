@@ -6,6 +6,8 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from database.db import Base
 
+from sqlalchemy import UniqueConstraint
+
 # Many-to-Many: Users <-> Skills
 # FIX: Use standard 'Column' for Table definitions, not 'mapped_column'
 user_skill_association = Table(
@@ -79,6 +81,8 @@ class Job(Base):
 
 class UserJobMatch(Base):
     __tablename__ = "user_job_matches"
+
+    __table_args__ = (UniqueConstraint("user_id", "job_id", name="uq_user_job"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))

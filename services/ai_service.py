@@ -1,110 +1,80 @@
-import json
-from typing import Dict, List
+from __future__ import annotations
+
+from typing import Any, Dict, List
 
 from services.job_fetcher import fetch_jobs_from_sources
-from utils.llm_helper import call_llm
+from utils.skill_extractor import extract_skills_rule_based
 
 
-# ---------------------------
-# SKILL EXTRACTION
-# ---------------------------
-async def extract_skills_from_resume(resume_text: str) -> Dict:
-    prompt = f"""
-You are an expert resume analyzer.
-
-Extract:
-- core technical skills
-- roles
-- seniority
-
-Return STRICT JSON:
-{{
-  "skills": [string],
-  "roles": [string],
-  "seniority": "junior | mid | senior"
-}}
-
-Resume:
-{resume_text}
-"""
-
-    response = await call_llm(prompt, expect_json=True)
-    return response
+async def extract_skills_from_resume(resume_text: str) -> Dict[str, Any]:
+    skills = extract_skills_rule_based(resume_text)
+    return {"skills": skills, "roles": [], "seniority": "junior"}
 
 
-# ---------------------------
-# JOB RECOMMENDATION (REAL AI)
-# ---------------------------
-async def get_job_recommendations(skills: list, resume_text: str):
+def _score_job(job: Dict[str, Any], skills: List[str]) -> int:
     """
-    FAST + BALANCED job recommendations using local LLM.
+    Simple rule-based scoring:
+    +2 if skill appears in title
+    +1 if skill appears in company/location
     """
+    title = (job.get("title") or "").lower()
+    company = (job.get("company") or "").lower()
+    location = (job.get("location") or "").lower()
 
-    # 1. If skills not provided, extract ONCE
+    score = 0
+    for sk in skills:
+        s = sk.lower()
+        if not s:
+            continue
+        if s in title:
+            score += 2
+        elif s in company or s in location:
+            score += 1
+
+    return score
+
+
+async def get_job_recommendations(skills: List[str], resume_text: str) -> List[Dict[str, Any]]:
+    # 1) Extract skills if not provided
     if not skills:
         data = await extract_skills_from_resume(resume_text)
-        skills = data.get("skills", [])[:5]  # cap skills
+        skills = data.get("skills", []) if isinstance(data, dict) else []
+
+    skills = [s.strip() for s in skills if isinstance(s, str) and s.strip()]
+
+    # keep query small for better Naukri relevance
+    skills = skills[:5]
 
     if not skills:
         return []
 
-    # 2. Fetch FEW jobs only
-    raw_jobs = fetch_jobs_from_sources(skills, limit=6)
+    # 2) Fetch jobs (ASYNC)
+    raw_jobs = await fetch_jobs_from_sources(skills, limit=10)
     if not raw_jobs:
         return []
 
-    # 3. VERY SHORT ranking prompt
-    prompt = f"""
-Rank these jobs for a candidate with skills: {', '.join(skills)}.
+    # 3) Score + sort
+    ranked = []
+    for job in raw_jobs:
+        sc = _score_job(job, skills)
+        job_out = dict(job)
+        job_out["score"] = sc
+        job_out["reasoning"] = (
+            f"Matched skills: {', '.join([s for s in skills if s.lower() in (job.get('title','').lower())])}"
+        )
+        ranked.append(job_out)
 
-Return JSON ONLY:
-[
-  {{
-    "title": str,
-    "company": str,
-    "location": str,
-    "link": str,
-    "source": str,
-    "score": int
-  }}
-]
-
-Jobs:
-{raw_jobs}
-"""
-
-    ranked = await call_llm(prompt, expect_json=True)
-
-    return sorted(ranked, key=lambda x: x.get("score", 0), reverse=True)
+    ranked.sort(key=lambda x: x.get("score", 0), reverse=True)
+    return ranked
 
 
-# ---------------------------
-# RESUME TAILORING
-# ---------------------------
 async def tailor_resume(resume_text: str, job_description: str) -> str:
-    prompt = f"""
-You are an expert resume writer.
-
-Rewrite the resume to strongly match the job description.
-Do NOT add fake experience.
-
-Resume:
-{resume_text}
-
-Job Description:
-{job_description}
-"""
-
-    return await call_llm(prompt)
+    """
+    No-AI placeholder: returns original resume text.
+    (You can add formatting improvements later.)
+    """
+    return resume_text.strip()
 
 
 async def rank_jobs(resume_text: str, jobs: list) -> list:
-    """
-    Backward compatibility wrapper for notification_service.
-    """
-    # Reuse existing AI ranking logic
-    skills_data = await extract_skills_from_resume(resume_text)
-    skills = skills_data.get("skills", [])
-
-    ranked_jobs = await get_job_recommendations(skills, resume_text)
-    return ranked_jobs
+    return await get_job_recommendations(skills=[], resume_text=resume_text)

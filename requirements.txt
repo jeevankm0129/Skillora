@@ -1,13 +1,19 @@
 python-telegram-bot
-openai
 python-dotenv
 SQLAlchemy
-pypdf
 python-docx
 apscheduler
 reportlab
-beautifulsoup4
-aiohttp
-lxml
-python-multipart
-requests
+
+# PDF extraction (text + scanned OCR)
+pdfplumber
+#pdf2image
+#pytesseract
+Pillow
+pdfplumber
+
+# Skill extraction helpers
+rapidfuzz
+
+# Async HTTP for Naukri scraper
+httpx

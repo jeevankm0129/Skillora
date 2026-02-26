@@ -1,29 +1,41 @@
-<!DOCTYPE html>
+<!-- index.html -->
+<!doctype html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skillora | AI Skill Intelligence</title>
-    <link rel="stylesheet" href="style.css">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#0b0714" />
+    <title>Skillora • AI Skill Intelligence</title>
+    <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body>
+    <!-- Interactive procedural background -->
+    <canvas id="bgfx" aria-hidden="true"></canvas>
 
-    <canvas id="particleCanvas"></canvas>
+    <main class="stage">
+        <section class="glass-card" id="glassCard">
+            <header class="hero">
+                <h1 class="brand">Skillora</h1>
+                <p class="kicker">AI SKILL INTELLIGENCE</p>
+            </header>
 
-    <main class="glass-container">
-        <header>
-            <h1>Skillora</h1>
-            <h2>AI Skill Intelligence</h2>
-        </header>
-
-        <section class="content">
-            <p>
-                Harness the power of autonomous intelligence to map, track, and amplify human potential.
-                Skillora analyzes micro-trends to evolve your workflow in real-time.
+            <p class="copy">
+                Harness autonomous intelligence to map, track, and amplify human potential.
+                Skillora detects micro-trends and evolves your workflow in real time.
             </p>
-            <a href="#" class="cta-button">Initialize Bot</a>
+
+            <div class="actions">
+                <button class="btn btn-primary" id="ctaBtn" type="button">
+                    Initialize Bot
+                    <span class="btn-glow" aria-hidden="true"></span>
+                </button>
+            </div>
+
+            <div class="micro" aria-hidden="true">
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            </div>
         </section>
     </main>
 

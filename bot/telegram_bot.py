@@ -23,17 +23,47 @@ logger = logging.getLogger(__name__)
 # Conversation States
 CHOOSING, RESUME_UPLOAD, JOB_DESC_UPLOAD = range(3)
 
+SUPPORTED_RESUME_EXTENSIONS = ("pdf", "docx")
+
+
+def _safe_filename_for_user(telegram_id: int, original_filename: str) -> str:
+    """Create a predictable temp filename tied to the Telegram user."""
+    return f"temp_{telegram_id}_{original_filename}"
+
 
 def _get_user_and_message(update: Update) -> tuple[Optional[TelegramUser], Optional[Message]]:
+    """Return strongly-typed user and message objects from update payload."""
     tg_user = cast(Optional[TelegramUser], update.effective_user)
     message = cast(Optional[Message], update.message)
     return tg_user, message
+
+
+def _is_supported_resume(filename: str) -> bool:
+    """Check whether uploaded file extension is supported by parser."""
+    extension = filename.split(".")[-1].lower()
+    return extension in SUPPORTED_RESUME_EXTENSIONS
+
+
+def _build_job_results_message(jobs: list[dict]) -> str:
+    """Build a markdown response containing top job matches."""
+    response = "🚀 *Top Job Matches for You:*\n\n"
+    for job in jobs[:3]:
+        title = job.get("title", "Unknown")
+        company = job.get("company", "Unknown")
+        location = job.get("location", "Unknown")
+        link = job.get("link", "")
+
+        response += f"*{title}*\n{company} — {location}\n"
+        response += f"[Apply Here]({link})\n\n" if link else "\n"
+
+    return response
 
 
 # =========================
 # START
 # =========================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Register user if needed and present primary actions."""
     tg_user, message = _get_user_and_message(update)
     if not tg_user or tg_user.id is None or not message:
         return ConversationHandler.END
@@ -63,6 +93,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 # JOB RECOMMENDATION FLOW
 # =========================
 async def ask_for_resume(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Prompt user to upload resume for recommendations."""
     _, message = _get_user_and_message(update)
     if not message:
         return ConversationHandler.END
@@ -75,6 +106,7 @@ async def ask_for_resume(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 
 async def handle_resume_file(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Validate, parse, and persist uploaded resume before async job matching."""
     tg_user, message = _get_user_and_message(update)
     if not tg_user or tg_user.id is None or not message:
         return ConversationHandler.END
@@ -89,12 +121,11 @@ async def handle_resume_file(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await message.reply_text("Uploaded file has no filename. Please try again.")
         return RESUME_UPLOAD
 
-    file_ext = file_name.split(".")[-1].lower()
-    if file_ext not in ("pdf", "docx"):
+    if not _is_supported_resume(file_name):
         await message.reply_text("Only PDF and DOCX files are supported.")
         return RESUME_UPLOAD
 
-    temp_filename = f"temp_{tg_user.id}_{file_name}"
+    temp_filename = _safe_filename_for_user(tg_user.id, file_name)
 
     try:
         file = await context.bot.get_file(document.file_id)
@@ -154,6 +185,7 @@ async def process_resume_background(
     resume_text: str,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
+    """Run heavier recommendation tasks without blocking the chat interaction."""
     try:
         # 1) Extract skills
         extracted = await extract_skills_from_resume(resume_text)
@@ -194,18 +226,7 @@ async def process_resume_background(
             return
 
         # 4) Send results
-        msg = "🚀 *Top Job Matches for You:*\n\n"
-        for job in jobs[:3]:
-            title = job.get("title", "Unknown")
-            company = job.get("company", "Unknown")
-            location = job.get("location", "Unknown")
-            link = job.get("link", "")
-
-            msg += f"*{title}*\n{company} — {location}\n"
-            if link:
-                msg += f"[Apply Here]({link})\n\n"
-            else:
-                msg += "\n"
+        msg = _build_job_results_message(jobs)
 
         await context.bot.send_message(
             chat_id=chat_id,
@@ -225,6 +246,7 @@ async def process_resume_background(
 # RESUME BUILDING FLOW (Tailor existing resume)
 # =========================
 async def ask_for_job_description(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Prompt user for target job description to tailor existing resume."""
     _, message = _get_user_and_message(update)
     if not message:
         return ConversationHandler.END
@@ -237,6 +259,7 @@ async def ask_for_job_description(update: Update, context: ContextTypes.DEFAULT_
 
 
 async def handle_job_description(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Generate a tailored resume PDF from stored resume and supplied job description."""
     tg_user, message = _get_user_and_message(update)
     if not tg_user or tg_user.id is None or not message:
         return ConversationHandler.END
@@ -277,6 +300,7 @@ async def handle_job_description(update: Update, context: ContextTypes.DEFAULT_T
 # CANCEL
 # =========================
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Abort active conversation flow and remove custom keyboard."""
     _, message = _get_user_and_message(update)
     if not message:
         return ConversationHandler.END

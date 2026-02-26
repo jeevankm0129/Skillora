@@ -6,7 +6,13 @@ from services.job_fetcher import fetch_jobs_from_sources
 from utils.skill_extractor import extract_skills_rule_based
 
 
+def _normalize_skill_inputs(skills: List[str]) -> List[str]:
+    """Normalize incoming skill list and drop empty values."""
+    return [skill.strip() for skill in skills if isinstance(skill, str) and skill.strip()]
+
+
 async def extract_skills_from_resume(resume_text: str) -> Dict[str, Any]:
+    """Extract resume signals using the current rule-based extractor."""
     skills = extract_skills_rule_based(resume_text)
     return {"skills": skills, "roles": [], "seniority": "junior"}
 
@@ -35,12 +41,13 @@ def _score_job(job: Dict[str, Any], skills: List[str]) -> int:
 
 
 async def get_job_recommendations(skills: List[str], resume_text: str) -> List[Dict[str, Any]]:
+    """Fetch and rank jobs against user skills while preserving existing behavior."""
     # 1) Extract skills if not provided
     if not skills:
         data = await extract_skills_from_resume(resume_text)
         skills = data.get("skills", []) if isinstance(data, dict) else []
 
-    skills = [s.strip() for s in skills if isinstance(s, str) and s.strip()]
+    skills = _normalize_skill_inputs(skills)
 
     # keep query small for better Naukri relevance
     skills = skills[:5]
@@ -54,18 +61,18 @@ async def get_job_recommendations(skills: List[str], resume_text: str) -> List[D
         return []
 
     # 3) Score + sort
-    ranked = []
+    ranked_jobs: List[Dict[str, Any]] = []
     for job in raw_jobs:
-        sc = _score_job(job, skills)
-        job_out = dict(job)
-        job_out["score"] = sc
-        job_out["reasoning"] = (
+        score = _score_job(job, skills)
+        ranked_job = dict(job)
+        ranked_job["score"] = score
+        ranked_job["reasoning"] = (
             f"Matched skills: {', '.join([s for s in skills if s.lower() in (job.get('title','').lower())])}"
         )
-        ranked.append(job_out)
+        ranked_jobs.append(ranked_job)
 
-    ranked.sort(key=lambda x: x.get("score", 0), reverse=True)
-    return ranked
+    ranked_jobs.sort(key=lambda item: item.get("score", 0), reverse=True)
+    return ranked_jobs
 
 
 async def tailor_resume(resume_text: str, job_description: str) -> str:

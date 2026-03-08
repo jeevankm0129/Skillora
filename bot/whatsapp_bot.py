@@ -1,20 +1,27 @@
 import logging
 
-# Placeholder for WhatsApp logic (e.g., using Twilio or Meta Graph API)
-# This would share the same 'services' and 'database' logic as the Telegram bot.
+from fastapi import APIRouter, Request
 
 logger = logging.getLogger(__name__)
 
+# This router is imported by main.py to keep the architecture intact
+whatsapp_router = APIRouter()
 
-def handle_whatsapp_message(sender_id: str, message_body: str):
-    """
-    Entry point for WhatsApp Webhooks.
-    """
-    logger.info(f"Received WhatsApp message from {sender_id}: {message_body}")
 
-    # Future Implementation:
-    # 1. Check user in DB (using whatsapp_id)
-    # 2. Route intent (Job Search vs Resume)
-    # 3. Call services.ai_service
-    # 4. Send response back via API
-    pass
+@whatsapp_router.get("/webhook")
+async def verify_whatsapp_webhook(request: Request):
+    """
+    Placeholder: Meta/WhatsApp requires a GET endpoint for webhook verification.
+    """
+    logger.info("WhatsApp GET webhook hit (Placeholder).")
+    return {"status": "WhatsApp integration is currently paused."}
+
+
+@whatsapp_router.post("/webhook")
+async def handle_whatsapp_message(request: Request):
+    """
+    Placeholder: Where incoming WhatsApp messages will eventually arrive.
+    """
+    logger.info("WhatsApp POST webhook hit (Placeholder).")
+    # Acknowledge the message so Meta doesn't think our server is dead
+    return {"status": "success"}

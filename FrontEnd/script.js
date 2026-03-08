@@ -1,314 +1,387 @@
-// script.js
-// Interactive procedural nebula + starfield:
-// - Mouse move: subtle turbulence disturbance
-// - Click: gentle ripple pulse (slight "drip" feel)
-// No images, no libraries.
+document.addEventListener("DOMContentLoaded", () => {
+    /* =========================================
+        1. THEME SWITCHER
+        ========================================= */
+    const themeToggle = document.getElementById('theme-toggle');
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', currentTheme);
 
-(() => {
-    const canvas = document.getElementById("bgfx");
-    const ctx = canvas.getContext("2d", { alpha: false });
-
-    const DPR = Math.min(2, window.devicePixelRatio || 1);
-
-    let W = 0, H = 0;
-
-    // ----- Stars (static field, slight shimmer) -----
-    const stars = [];
-    function initStars(count) {
-        stars.length = 0;
-        for (let i = 0; i < count; i++) {
-            const x = Math.random();
-            const y = Math.random();
-            const r = Math.random() * 1.4 + 0.2;
-            const warm = Math.random() < 0.18; // few golden stars
-            const a = Math.random() * 0.6 + 0.25;
-            const tw = Math.random() * 0.8 + 0.2;
-            stars.push({ x, y, r, warm, a, tw, p: Math.random() * Math.PI * 2 });
-        }
-    }
-
-    // ----- Ripple field (heightmap) -----
-    // Small-res sim for performance. Used to distort nebula sampling.
-    let simW = 0, simH = 0;
-    let h0, h1; // height buffers
-    function initRippleSim() {
-        // keep it proportional + light
-        simW = Math.max(160, Math.floor(W / 10));
-        simH = Math.max(120, Math.floor(H / 10));
-        h0 = new Float32Array(simW * simH);
-        h1 = new Float32Array(simW * simH);
-    }
-
-    function splash(nx, ny, strength = 0.9, radius = 6) {
-        const cx = Math.floor(nx * simW);
-        const cy = Math.floor(ny * simH);
-        const r2 = radius * radius;
-
-        for (let y = -radius; y <= radius; y++) {
-            for (let x = -radius; x <= radius; x++) {
-                const dx = x, dy = y;
-                if (dx * dx + dy * dy > r2) continue;
-                const ix = cx + x;
-                const iy = cy + y;
-                if (ix < 1 || iy < 1 || ix >= simW - 1 || iy >= simH - 1) continue;
-                const falloff = 1 - (dx * dx + dy * dy) / r2;
-                h0[iy * simW + ix] += strength * falloff;
-            }
-        }
-    }
-
-    function stepRipples() {
-        // classic ripple: h1 = (neighbors avg - h1) * damping
-        const damping = 0.985; // higher = subtler/longer
-        for (let y = 1; y < simH - 1; y++) {
-            const row = y * simW;
-            for (let x = 1; x < simW - 1; x++) {
-                const i = row + x;
-                const n =
-                    h0[i - 1] + h0[i + 1] +
-                    h0[i - simW] + h0[i + simW];
-                const v = (n * 0.5 - h1[i]);
-                h1[i] = v * damping;
-            }
-        }
-        // swap
-        const tmp = h0; h0 = h1; h1 = tmp;
-    }
-
-    // ----- Mouse interaction -----
-    const pointer = {
-        x: 0.5, y: 0.5,
-        vx: 0, vy: 0,
-        down: false
-    };
-
-    let t = 0;
-
-    function resize() {
-        W = Math.floor(window.innerWidth);
-        H = Math.floor(window.innerHeight);
-        canvas.width = Math.floor(W * DPR);
-        canvas.height = Math.floor(H * DPR);
-        canvas.style.width = W + "px";
-        canvas.style.height = H + "px";
-        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-
-        initStars(Math.floor((W * H) / 18000)); // density
-        initRippleSim();
-    }
-
-    window.addEventListener("resize", resize, { passive: true });
-
-    // Mouse move = gentle disturbance
-    window.addEventListener("mousemove", (e) => {
-        const nx = e.clientX / W;
-        const ny = e.clientY / H;
-
-        pointer.vx = (nx - pointer.x);
-        pointer.vy = (ny - pointer.y);
-        pointer.x = nx;
-        pointer.y = ny;
-
-        // subtle continuous disturbance (small)
-        const vel = Math.hypot(pointer.vx, pointer.vy);
-        const s = Math.min(0.5, vel * 4.0) * 0.35; // keep subtle
-        splash(nx, ny, s, 5);
-    }, { passive: true });
-
-    // Click ripple (slight drip pulse)
-    window.addEventListener("pointerdown", (e) => {
-        pointer.down = true;
-        const nx = e.clientX / W;
-        const ny = e.clientY / H;
-
-        // Small, premium ripple: not too strong
-        splash(nx, ny, 1.2, 8);
-        // a tiny second pulse to mimic "drip"
-        setTimeout(() => splash(nx, ny, 0.55, 6), 70);
-    }, { passive: true });
-
-    window.addEventListener("pointerup", () => { pointer.down = false; }, { passive: true });
-
-    // ----- Procedural Nebula -----
-    // Cheap “flow” using layered sin fields + ripple distortion.
-    function nebulaColor(u, v, time, dx, dy) {
-        // Distort UV (mouse ripples)
-        u += dx;
-        v += dy;
-
-        // Flowing streaks: layered waves
-        const a =
-            Math.sin((u * 7.2 + time * 0.55) + Math.cos(v * 3.2 - time * 0.35)) +
-            Math.sin((v * 6.0 - time * 0.42) + Math.cos(u * 2.8 + time * 0.25));
-
-        const b =
-            Math.sin((u * 14.0 - time * 0.75) + v * 3.0) * 0.55 +
-            Math.cos((v * 12.0 + time * 0.62) - u * 2.0) * 0.45;
-
-        const streak = (a * 0.6 + b * 0.4);
-        const density = Math.max(0, streak);
-
-        // Soft vignetting & depth
-        const cx = u - 0.5, cy = v - 0.5;
-        const vign = 1 - Math.min(1, (cx * cx + cy * cy) * 1.35);
-
-        // Palette (deep space -> modern purple -> lilac glow)
-        const deep = { r: 10, g: 6, b: 24 };
-        const mid = { r: 90, g: 32, b: 160 };
-        const hi = { r: 175, g: 110, b: 255 };
-
-        const k = Math.min(1, density * 0.72 + 0.08) * vign;
-
-        // Extra bloom banding
-        const glow = Math.pow(Math.max(0, density), 1.6) * 0.55;
-
-        const r = deep.r + (mid.r - deep.r) * k + (hi.r - mid.r) * glow;
-        const g = deep.g + (mid.g - deep.g) * k + (hi.g - mid.g) * glow;
-        const bcol = deep.b + (mid.b - deep.b) * k + (hi.b - mid.b) * glow;
-
-        return { r, g, b: bcol, k };
-    }
-
-    // Render strategy:
-    // - Draw base gradient
-    // - Draw nebula in low-res offscreen, scale up w/ blur-ish alpha layers (premium softness)
-    // - Draw stars on top
-    const off = document.createElement("canvas");
-    const offCtx = off.getContext("2d");
-
-    function render() {
-        t += 0.016;
-
-        stepRipples();
-
-        // Base gradient (premium deep space)
-        const grd = ctx.createLinearGradient(0, 0, W, H);
-        grd.addColorStop(0, "#05040b");
-        grd.addColorStop(0.35, "#0b0616");
-        grd.addColorStop(0.7, "#120622");
-        grd.addColorStop(1, "#07030d");
-        ctx.fillStyle = grd;
-        ctx.fillRect(0, 0, W, H);
-
-        // Offscreen nebula (low res for speed)
-        const scale = 0.55; // lower = faster, smoother
-        const nW = Math.floor(W * scale);
-        const nH = Math.floor(H * scale);
-        off.width = nW;
-        off.height = nH;
-
-        const img = offCtx.createImageData(nW, nH);
-        const data = img.data;
-
-        // Ripple->distortion mapping
-        const amp = 0.012; // distortion amount (keep subtle/premium)
-        const time = t;
-
-        for (let y = 0; y < nH; y++) {
-            const v = y / nH;
-            const sy = Math.floor(v * (simH - 1));
-
-            for (let x = 0; x < nW; x++) {
-                const u = x / nW;
-                const sx = Math.floor(u * (simW - 1));
-                const h = h0[sy * simW + sx] || 0;
-
-                // Use ripple height to distort sampling
-                const dx = h * amp;
-                const dy = h * amp * 0.8;
-
-                const c = nebulaColor(u, v, time, dx, dy);
-
-                const i = (y * nW + x) * 4;
-
-                // Add soft “dust” speckles inside nebula
-                const dust = Math.max(0, Math.sin((u * 48 + v * 32) + time * 0.9)) * 0.03 * c.k;
-
-                data[i + 0] = Math.max(0, Math.min(255, c.r + 255 * dust));
-                data[i + 1] = Math.max(0, Math.min(255, c.g + 255 * dust));
-                data[i + 2] = Math.max(0, Math.min(255, c.b + 255 * dust));
-                data[i + 3] = 255;
-            }
-        }
-
-        offCtx.putImageData(img, 0, 0);
-
-        // Composite nebula: multiple passes = soft “blurred streaks” look
-        ctx.globalCompositeOperation = "screen";
-        ctx.globalAlpha = 0.34;
-        ctx.drawImage(off, -W * 0.02, -H * 0.02, W * 1.04, H * 1.04);
-
-        ctx.globalAlpha = 0.22;
-        ctx.drawImage(off, 0, 0, W, H);
-
-        // extra glow pass
-        ctx.globalAlpha = 0.14;
-        ctx.drawImage(off, W * 0.01, H * 0.01, W * 0.98, H * 0.98);
-
-        ctx.globalCompositeOperation = "source-over";
-        ctx.globalAlpha = 1;
-
-        // Stars (on top) + subtle twinkle
-        for (const s of stars) {
-            s.p += 0.01 * s.tw;
-            const tw = 0.75 + Math.sin(s.p) * 0.25;
-            const x = s.x * W;
-            const y = s.y * H;
-            const r = s.r * tw;
-            const a = s.a * tw;
-
-            ctx.beginPath();
-            ctx.arc(x, y, r, 0, Math.PI * 2);
-
-            if (s.warm) {
-                ctx.fillStyle = `rgba(255, 210, 120, ${a})`;
-            } else {
-                ctx.fillStyle = `rgba(255, 255, 255, ${a})`;
-            }
-            ctx.fill();
-        }
-
-        // Soft vignette to keep it premium
-        const vg = ctx.createRadialGradient(W * 0.5, H * 0.45, Math.min(W, H) * 0.2, W * 0.5, H * 0.5, Math.max(W, H) * 0.75);
-        vg.addColorStop(0, "rgba(0,0,0,0)");
-        vg.addColorStop(1, "rgba(0,0,0,0.55)");
-        ctx.fillStyle = vg;
-        ctx.fillRect(0, 0, W, H);
-
-        requestAnimationFrame(render);
-    }
-
-    // Tiny tilt for the card (kept premium)
-    const card = document.getElementById("glassCard");
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (!reduceMotion) {
-        window.addEventListener("mousemove", (e) => {
-            const x = (e.clientX / W) - 0.5;
-            const y = (e.clientY / H) - 0.5;
-            const tx = (y * 4).toFixed(2);
-            const ty = (-x * 6).toFixed(2);
-            card.style.transform = `perspective(900px) rotateX(${tx}deg) rotateY(${ty}deg) translateZ(0)`;
-        }, { passive: true });
-
-        window.addEventListener("mouseleave", () => {
-            card.style.transform = `perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0)`;
+    if (themeToggle) {
+        themeToggle.innerHTML = currentTheme === 'dark' ? '☀️' : '🌙';
+        themeToggle.addEventListener('click', () => {
+            let theme = document.documentElement.getAttribute('data-theme');
+            let newTheme = theme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            themeToggle.innerHTML = newTheme === 'dark' ? '☀️' : '🌙';
+            updateParticleColor(newTheme);
         });
     }
 
-    // CTA micro animation
-    document.getElementById("ctaBtn").addEventListener("click", () => {
-        card.animate(
-            [
-                { transform: card.style.transform || "perspective(900px) translateZ(0)" },
-                { transform: "perspective(900px) translateZ(0) scale(1.012)" },
-                { transform: card.style.transform || "perspective(900px) translateZ(0)" }
-            ],
-            { duration: 360, easing: "cubic-bezier(.2,.9,.2,1)" }
-        );
+    /* =========================================
+        2. BUTTERY SMOOTH 3D HOVERBOARD (Lerping)
+        ========================================= */
+    const glassContainer = document.querySelector('.glass-container');
+    const maxTilt = 1.2;
+
+    let targetRotateX = 0;
+    let targetRotateY = 0;
+    let currentRotateX = 0;
+    let currentRotateY = 0;
+
+    if (glassContainer && window.matchMedia("(hover: hover)").matches) {
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth) * 2 - 1;
+            const y = (e.clientY / window.innerHeight) * 2 - 1;
+            targetRotateX = y * maxTilt;
+            targetRotateY = -x * maxTilt;
+        });
+
+        document.addEventListener('mouseleave', () => {
+            targetRotateX = 0;
+            targetRotateY = 0;
+        });
+
+        function animateGlass() {
+            currentRotateX += (targetRotateX - currentRotateX) * 0.08;
+            currentRotateY += (targetRotateY - currentRotateY) * 0.08;
+            glassContainer.style.transform = `rotateX(${currentRotateX}deg) rotateY(${currentRotateY}deg) translateZ(0)`;
+            requestAnimationFrame(animateGlass);
+        }
+        animateGlass();
+    }
+
+    /* =========================================
+        3. OPTIMIZED FLUID SWARM & RIPPLE ENGINE
+        ========================================= */
+    const canvas = document.getElementById('morphic-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d', { alpha: false });
+
+    let particles = [];
+    let ripples = [];
+    let mouse = { x: null, y: null };
+    const PI2 = Math.PI * 2;
+
+    function setCanvasSize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    setCanvasSize();
+    window.addEventListener('resize', () => { setCanvasSize(); initParticles(); });
+
+    window.addEventListener('mousemove', (e) => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+    });
+    window.addEventListener('mouseout', () => {
+        mouse.x = null;
+        mouse.y = null;
     });
 
-    // Boot
-    resize();
-    render();
-})();
+    window.addEventListener('mousedown', (e) => {
+        ripples.push({
+            x: e.clientX, y: e.clientY,
+            radius: 0, maxRadius: 100, speed: 10, force: 25
+        });
+    });
+
+    let particleColor = currentTheme === 'light' ? 'rgba(91, 60, 228, 0.9)' : 'rgba(167, 139, 250, 0.9)';
+
+    function updateParticleColor(theme) {
+        particleColor = theme === 'light' ? 'rgba(91, 60, 228, 0.9)' : 'rgba(167, 139, 250, 0.9)';
+        initParticles();
+    }
+
+    class Particle {
+        constructor(x, y, size) {
+            this.x = x; this.y = y;
+            this.vx = (Math.random() - 0.5) * 2;
+            this.vy = (Math.random() - 0.5) * 2;
+            this.size = size;
+        }
+
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, PI2);
+            ctx.fillStyle = particleColor;
+            ctx.fill();
+        }
+
+        update() {
+            if (mouse.x !== null && mouse.y !== null) {
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < 400) {
+                    let pullForce = (400 - distance) / 400;
+                    this.vx += (dx / distance) * pullForce * 0.15;
+                    this.vy += (dy / distance) * pullForce * 0.15;
+                }
+            }
+
+            for (let i = 0; i < ripples.length; i++) {
+                let ripple = ripples[i];
+                let dx = this.x - ripple.x;
+                let dy = this.y - ripple.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance > ripple.radius - 30 && distance < ripple.radius + 30) {
+                    let pushStrength = ripple.force * (1 - ripple.radius / ripple.maxRadius);
+                    this.vx += (dx / distance) * pushStrength;
+                    this.vy += (dy / distance) * pushStrength;
+                }
+            }
+
+            this.vx += (Math.random() - 0.5) * 0.2;
+            this.vy += (Math.random() - 0.5) * 0.2;
+            this.vx *= 0.94; this.vy *= 0.94;
+            this.x += this.vx; this.y += this.vy;
+
+            if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+            if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+
+            this.draw();
+        }
+    }
+
+    function initParticles() {
+        particles = [];
+        let numberOfParticles = 1000;
+        for (let i = 0; i < numberOfParticles; i++) {
+            let size = (Math.random() * 2) + 1.5;
+            let x = Math.random() * canvas.width;
+            let y = Math.random() * canvas.height;
+            particles.push(new Particle(x, y, size));
+        }
+    }
+
+    function clearCanvas() {
+        ctx.fillStyle = document.documentElement.getAttribute('data-theme') === 'light' ? '#e6dcfc' : '#0b0320';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        clearCanvas();
+
+        for (let i = 0; i < ripples.length; i++) {
+            ripples[i].radius += ripples[i].speed;
+        }
+        ripples = ripples.filter(r => r.radius < r.maxRadius);
+
+        for (let i = 0; i < particles.length; i++) {
+            particles[i].update();
+        }
+    }
+
+    initParticles();
+    animate();
+
+    /* =========================================
+        4. FRONTEND UI CHOREOGRAPHY (Job Card)
+        ========================================= */
+    const jobCard = document.getElementById('job-card');
+    const heroText = document.getElementById('hero-text');
+    const btnResume = document.getElementById('btn-resume');
+
+    window.expandJobCard = function () {
+        if (!jobCard.classList.contains('expanded')) {
+            jobCard.classList.add('expanded');
+            heroText.classList.add('shift-up');
+            btnResume.classList.add('shift-down');
+        }
+    };
+
+    window.closeJobCard = function (event) {
+        event.stopPropagation();
+        jobCard.classList.remove('expanded');
+        heroText.classList.remove('shift-up');
+        btnResume.classList.remove('shift-down');
+    };
+
+    /* =========================================
+        5. SEAMLESS REDIRECTION: BUILD RESUME
+        ========================================= */
+    window.redirectToTelegramResume = function () {
+        // Replace 'YourBotUsername' with your actual Telegram bot username
+        const botUsername = "mySkilloraBot";
+        const startParam = "build_resume";
+
+        // Telegram Deep Link URL
+        const telegramUrl = `https://t.me/${botUsername}?start=${startParam}`;
+
+        // Open Telegram app/web in a new tab
+        window.open(telegramUrl, '_blank');
+    };
+
+    /* =========================================
+        6. BACKEND API INTEGRATION & LIVE AI UI
+        ========================================= */
+    window.handleFileUpload = async function (event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const dropZoneText = document.getElementById('drop-zone-text');
+        const scanLine = document.getElementById('scan-line');
+        const uploadUI = document.querySelector('.job-upload-ui');
+        const jobCardContainer = document.getElementById('job-card');
+
+        // UI Update: Show Loading Scanner
+        dropZoneText.innerHTML = `Extracting Intelligence from <strong>${file.name}</strong>...<br><span style="font-size: 0.8rem; color: var(--accent-1);">Pinging global job markets...</span>`;
+        scanLine.style.display = 'block';
+
+        let scanPos = 0;
+        let scanDirection = 1;
+        const scanInterval = setInterval(() => {
+            scanPos += 5 * scanDirection;
+            if (scanPos > 95 || scanPos < 0) scanDirection *= -1;
+            scanLine.style.top = `${scanPos}%`;
+        }, 50);
+
+        const formData = new FormData();
+        formData.append('resume', file);
+
+        try {
+            const response = await fetch('/api/recommend-jobs', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            clearInterval(scanInterval);
+
+            if (data.status === "success" || data.status === "needs_email") {
+                uploadUI.style.display = 'none';
+
+                const resultsDiv = document.createElement('div');
+                resultsDiv.id = 'job-results-ui';
+                resultsDiv.style.width = '100%';
+                resultsDiv.style.height = '100%';
+                resultsDiv.style.padding = '20px';
+                resultsDiv.style.display = 'flex';
+                resultsDiv.style.flexDirection = 'column';
+                resultsDiv.style.overflowY = 'auto';
+
+                let htmlContent = '';
+
+                // --- STATE A: JOBS FOUND ---
+                if (data.status === "success") {
+                    htmlContent += `<h3 class="gradient-text" style="font-size: 1.5rem; margin-bottom: 15px; text-align: center;">${data.jobs.length} Top Matches</h3>`;
+                    htmlContent += `<div style="display: flex; flex-direction: column; gap: 12px; padding-right: 5px;">`;
+
+                    data.jobs.forEach(job => {
+                        htmlContent += `
+                            <div style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 18px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; transition: all 0.3s;" onmouseover="this.style.borderColor='var(--accent-1)'" onmouseout="this.style.borderColor='var(--glass-border)'">
+
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div style="text-align: left;">
+                                        <h4 style="margin-bottom: 3px; font-size: 1.1rem; color: var(--text-main);">${job.title}</h4>
+                                        <p style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">${job.company} • ${job.location}</p>
+                                    </div>
+                                    <div style="background: rgba(124, 92, 255, 0.2); color: var(--accent-1); padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; border: 1px solid rgba(124, 92, 255, 0.4); flex-shrink: 0;">
+                                        ${job.match}
+                                    </div>
+                                </div>
+
+                                <p style="color: #d1d5db; font-size: 0.85rem; text-align: left; border-left: 2px solid var(--accent-1); padding-left: 10px; margin-top: 5px; font-style: italic;">
+                                    "${job.reasoning}"
+                                </p>
+
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
+                                    <span style="color: var(--text-muted); font-size: 0.85rem;">${job.salary}</span>
+                                    <a href="${job.link}" target="_blank" class="btn btn-primary" style="padding: 6px 16px; font-size: 0.85rem; min-width: auto; text-decoration: none;">Apply Now</a>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    htmlContent += `</div>`;
+                }
+                // --- STATE B: NO JOBS FOUND (Needs Email) ---
+                else if (data.status === "needs_email") {
+                    htmlContent += `
+                  <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center;">
+                      <h3 class="gradient-text" style="font-size: 1.5rem; margin-bottom: 10px;">Market Analysis Complete</h3>
+                      <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 25px; max-width: 80%;">${data.message}</p>
+
+                      <div style="display: flex; gap: 10px; width: 100%; max-width: 400px;">
+                          <input type="email" id="alert-email" placeholder="Enter your email address" style="flex: 1; padding: 12px 15px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: white; outline: none; font-size: 0.95rem;">
+                          <button class="btn btn-primary" onclick="submitEmailAlert()" style="padding: 10px 20px;">Track</button>
+                      </div>
+                      <p id="alert-status" style="margin-top: 15px; font-size: 0.85rem; min-height: 1.2rem;"></p>
+                  </div>
+              `;
+                }
+
+                htmlContent += `<button class="btn btn-outline" style="margin-top: 20px; align-self: center; flex-shrink: 0;" onclick="resetJobCard(event)">Close Dashboard</button>`;
+
+                resultsDiv.innerHTML = htmlContent;
+                jobCardContainer.appendChild(resultsDiv);
+
+            } else {
+                dropZoneText.innerHTML = `<span style="color: #f87171;">Error: ${data.message}</span>`;
+                scanLine.style.display = 'none';
+            }
+
+        } catch (error) {
+            clearInterval(scanInterval);
+            scanLine.style.display = 'none';
+            dropZoneText.innerHTML = `<span style="color: #f87171;">Server offline. Transmission failed.</span>`;
+            console.error(error);
+        }
+    };
+
+    /* =========================================
+        7. UTILITY FUNCTIONS
+        ========================================= */
+    window.resetJobCard = function (event) {
+        event.stopPropagation();
+
+        const resultsDiv = document.getElementById('job-results-ui');
+        if (resultsDiv) resultsDiv.remove();
+
+        const uploadUI = document.querySelector('.job-upload-ui');
+        if (uploadUI) uploadUI.style.display = 'flex';
+
+        const dropZoneText = document.getElementById('drop-zone-text');
+        if (dropZoneText) dropZoneText.innerHTML = 'Click to Upload PDF Document';
+
+        const resumeUpload = document.getElementById('resume-upload');
+        if (resumeUpload) resumeUpload.value = '';
+
+        if (typeof closeJobCard === "function") {
+            closeJobCard(event);
+        }
+    };
+
+    window.submitEmailAlert = async function () {
+        const emailInput = document.getElementById('alert-email');
+        const statusText = document.getElementById('alert-status');
+        const email = emailInput.value;
+
+        if (!email || !email.includes('@')) {
+            statusText.style.color = '#f87171';
+            statusText.innerText = "Please enter a valid email.";
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('email', email);
+
+        try {
+            const response = await fetch('/api/save-email-alert', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+
+            statusText.style.color = '#4ade80';
+            statusText.innerText = result.message;
+            emailInput.value = ''; // Clear input
+        } catch (e) {
+            statusText.style.color = '#f87171';
+            statusText.innerText = "Error connecting to server.";
+        }
+    };
+});

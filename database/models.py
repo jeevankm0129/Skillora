@@ -1,20 +1,28 @@
-from __future__ import annotations
+from datetime import datetime
+from typing import List, Optional
 
-from sqlalchemy import Column  # Required for Table definitions
-from sqlalchemy import BigInteger, Boolean, ForeignKey, Integer, String, Table, Text
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Table,
+    Text,
+    UniqueConstraint,
+)
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.db import Base
 
-from sqlalchemy import UniqueConstraint
-
-# Many-to-Many: Users <-> Skills
-# FIX: Use standard 'Column' for Table definitions, not 'mapped_column'
+# Association table for Many-to-Many User <-> Skill relationship
 user_skill_association = Table(
     "user_skill",
     Base.metadata,
-    Column("user_id", Integer, ForeignKey("users.id")),
-    Column("skill_id", Integer, ForeignKey("skills.id")),
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("skill_id", Integer, ForeignKey("skills.id", ondelete="CASCADE"), primary_key=True),
 )
 
 
@@ -22,22 +30,26 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
-    whatsapp_id: Mapped[str | None] = mapped_column(String, unique=True, index=True, nullable=True)
-    email: Mapped[str | None] = mapped_column(String, unique=True, index=True, nullable=True)
-    phone: Mapped[str | None] = mapped_column(String, nullable=True)
+    telegram_id: Mapped[Optional[int]] = mapped_column(
+        BigInteger, unique=True, index=True, nullable=True
+    )
+    whatsapp_id: Mapped[Optional[str]] = mapped_column(
+        String, unique=True, index=True, nullable=True
+    )
+    email: Mapped[Optional[str]] = mapped_column(String, unique=True, index=True, nullable=True)
 
+    # Notification Flags
     notify_by_email: Mapped[bool] = mapped_column(Boolean, default=False)
-    notify_by_telegram: Mapped[bool] = mapped_column(Boolean, default=True)
+    background_tracking_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
 
     # Relationships
-    resume: Mapped[Resume | None] = relationship(
+    resume: Mapped[Optional["Resume"]] = relationship(
         "Resume", back_populates="user", uselist=False, cascade="all, delete-orphan"
     )
-    skills: Mapped[list[Skill]] = relationship(
+    skills: Mapped[List["Skill"]] = relationship(
         "Skill", secondary=user_skill_association, back_populates="users"
     )
-    job_matches: Mapped[list[UserJobMatch]] = relationship(
+    job_matches: Mapped[List["UserJobMatch"]] = relationship(
         "UserJobMatch", back_populates="user", cascade="all, delete-orphan"
     )
 
@@ -46,12 +58,15 @@ class Resume(Base):
     __tablename__ = "resumes"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), unique=True
+    )
     text_content: Mapped[str] = mapped_column(Text, nullable=False)
 
-    parsed_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # We will store the generated ATS PDF path here later
+    pdf_file_path: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
-    user: Mapped[User] = relationship("User", back_populates="resume")
+    user: Mapped["User"] = relationship("User", back_populates="resume")
 
 
 class Skill(Base):
@@ -60,7 +75,7 @@ class Skill(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
 
-    users: Mapped[list[User]] = relationship(
+    users: Mapped[List["User"]] = relationship(
         "User", secondary=user_skill_association, back_populates="skills"
     )
 
@@ -73,25 +88,27 @@ class Job(Base):
     company: Mapped[str] = mapped_column(String)
     location: Mapped[str] = mapped_column(String)
     link: Mapped[str] = mapped_column(String, unique=True)
-    description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    source: Mapped[str] = mapped_column(String, default="Manual")
+    source: Mapped[str] = mapped_column(String, default="API")
 
-    matches: Mapped[list[UserJobMatch]] = relationship("UserJobMatch", back_populates="job")
+    # Crucial for the background loop
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    matches: Mapped[List["UserJobMatch"]] = relationship(
+        "UserJobMatch", back_populates="job", cascade="all, delete-orphan"
+    )
 
 
 class UserJobMatch(Base):
     __tablename__ = "user_job_matches"
-
     __table_args__ = (UniqueConstraint("user_id", "job_id", name="uq_user_job"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
-    job_id: Mapped[int] = mapped_column(Integer, ForeignKey("jobs.id"))
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    job_id: Mapped[int] = mapped_column(Integer, ForeignKey("jobs.id", ondelete="CASCADE"))
 
     relevance_score: Mapped[int] = mapped_column(Integer, default=0)
-    reasoning: Mapped[str | None] = mapped_column(Text, nullable=True)
-
     notified: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
-    user: Mapped[User] = relationship("User", back_populates="job_matches")
-    job: Mapped[Job] = relationship("Job", back_populates="matches")
+    user: Mapped["User"] = relationship("User", back_populates="job_matches")
+    job: Mapped["Job"] = relationship("Job", back_populates="matches")

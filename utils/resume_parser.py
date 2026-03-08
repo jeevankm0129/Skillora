@@ -1,3 +1,4 @@
+import io
 import logging
 from typing import List
 
@@ -7,59 +8,31 @@ from docx import Document
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------
-# PDF PARSER (Text-based only)
-# ---------------------------
-def parse_pdf(file_path: str) -> str:
+def parse_resume(file_bytes: io.BytesIO, extension: str) -> str:
     """
-    Extracts text from a text-based PDF using pdfplumber.
-    Works only if the PDF contains selectable text.
+    Extracts text from an in-memory document stream.
+    Supports: PDF (text-based) and DOCX.
     """
     try:
-        text_parts: List[str] = []
+        if extension == "pdf":
+            text_parts: List[str] = []
+            # pdfplumber natively accepts BytesIO objects
+            with pdfplumber.open(file_bytes) as pdf:
+                for page in pdf.pages:
+                    content = page.extract_text()
+                    if content:
+                        text_parts.append(content)
+            return "\n".join(text_parts).strip()
 
-        with pdfplumber.open(file_path) as pdf:
-            for page in pdf.pages:
-                content = page.extract_text()
-                if content:
-                    text_parts.append(content)
+        elif extension == "docx":
+            # python-docx natively accepts BytesIO objects
+            doc = Document(file_bytes)
+            return "\n".join(para.text.strip() for para in doc.paragraphs if para.text.strip())
 
-        return "\n".join(text_parts).strip()
+        else:
+            logger.warning(f"Unsupported file format: {extension}")
+            return ""
 
     except Exception as e:
-        logger.error(f"Error parsing PDF {file_path}: {e}")
-        return ""
-
-
-# ---------------------------
-# DOCX PARSER
-# ---------------------------
-def parse_docx(file_path: str) -> str:
-    """
-    Extracts text from a DOCX file.
-    """
-    try:
-        doc = Document(file_path)
-        return "\n".join(para.text.strip() for para in doc.paragraphs if para.text.strip())
-    except Exception as e:
-        logger.error(f"Error parsing DOCX {file_path}: {e}")
-        return ""
-
-
-# ---------------------------
-# MAIN RESUME PARSER
-# ---------------------------
-def parse_resume(file_path: str) -> str:
-    """
-    Detects file type and extracts resume text.
-    Supports: PDF (text-based), DOCX
-    """
-    extension = file_path.split(".")[-1].lower()
-
-    if extension == "pdf":
-        return parse_pdf(file_path)
-    elif extension == "docx":
-        return parse_docx(file_path)
-    else:
-        logger.warning(f"Unsupported file format: {extension}")
+        logger.error(f"Error parsing document: {e}")
         return ""

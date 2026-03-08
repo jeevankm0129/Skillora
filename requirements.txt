@@ -1,19 +1,27 @@
+# Web & API Framework
+fastapi
+uvicorn[standard]
+
+# Bots
 python-telegram-bot
-python-dotenv
+
+# Database (Async)
 SQLAlchemy
-python-docx
+aiosqlite
+
+# Background Tasks
 apscheduler
-reportlab
 
-# PDF extraction (text + scanned OCR)
+# Local AI & Parsing (Pure Python)
 pdfplumber
-#pdf2image
-#pytesseract
-Pillow
-pdfplumber
-
-# Skill extraction helpers
 rapidfuzz
 
-# Async HTTP for Naukri scraper
+# Document Generation
+reportlab
+
+# Utilities
+python-dotenv
+
 httpx
+
+python-multipart

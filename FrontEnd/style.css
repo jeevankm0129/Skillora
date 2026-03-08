@@ -1,228 +1,652 @@
-/* styles.css */
+/* =========================================
+   1. THEME VARIABLES (Dark & Light Mode)
+   ========================================= */
 :root {
-    --bg: #0b0714;
-    --primary: #8f3dff;
-    --primary-2: #c06bff;
-    --text: rgba(255, 255, 255, 0.92);
-    --muted: rgba(255, 255, 255, 0.66);
+    --bg-1: #0b0320;
+    --bg-2: #16073a;
+    --bg-3: #1e0d4f;
+    --text-main: #ffffff;
+    --text-muted: #a1a1aa;
 
-    --glass: rgba(255, 255, 255, 0.10);
-    /* ~10% */
-    --glass-border: rgba(255, 255, 255, 0.16);
+    --glass-bg: transparent;
+    --glass-border: rgba(255, 255, 255, 0.15);
+    --glass-shadow: rgba(120, 80, 255, 0.25);
+    --card-bg: rgba(255, 255, 255, 0.03);
+
+    --accent-1: #7c5cff;
+    --accent-2: #a78bfa;
 }
 
+[data-theme="light"] {
+    --bg-1: #e6dcfc;
+    --bg-2: #f3ecff;
+    --bg-3: #e4d8fb;
+
+    --text-main: #1d1d1f;
+    --text-muted: #6b6b7b;
+
+    --glass-bg: transparent;
+    --glass-border: rgba(255, 255, 255, 0.5);
+    --glass-shadow: rgba(120, 80, 255, 0.08);
+    --card-bg: rgba(255, 255, 255, 0.15);
+
+    --accent-1: #5b3ce4;
+    --accent-2: #8b6bed;
+}
+
+/* =========================================
+   2. RESET & TYPOGRAPHY
+   ========================================= */
 * {
+    margin: 0;
+    padding: 0;
     box-sizing: border-box;
 }
 
-html,
 body {
-    height: 100%;
-}
-
-body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--text);
-    overflow: hidden;
-
-    /* EXACT Apple-style stack */
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text-main);
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    transition: color 0.5s ease;
+    background-color: #000;
 }
 
-/* Full-viewport interactive background canvas */
-#bgfx {
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* =========================================
+   3. LAYERED BACKGROUND SYSTEM
+   ========================================= */
+.layer-1-bg {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: -2;
-    display: block;
+    background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
+    z-index: 1;
+    transition: background 0.5s ease;
 }
 
-/* Layout */
-.stage {
-    min-height: 100vh;
-    display: grid;
-    place-items: center;
-    padding: 28px 18px;
+.layer-2-stars {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: radial-gradient(var(--text-muted) 1px, transparent 1px);
+    background-size: 80px 80px;
+    opacity: 0.1;
+    z-index: 2;
 }
 
-/* Glass Card */
-.glass-card {
-    width: min(680px, 92vw);
-    padding: clamp(22px, 4.2vw, 38px);
-    border-radius: 22px;
-
-    background: var(--glass);
-    border: 1px solid var(--glass-border);
-
-    backdrop-filter: blur(28px);
-    -webkit-backdrop-filter: blur(28px);
-
-    box-shadow:
-        0 18px 60px rgba(0, 0, 0, 0.55),
-        0 0 0 1px rgba(150, 85, 255, 0.10) inset,
-        0 0 36px rgba(143, 61, 255, 0.16);
-
-    transition: box-shadow 220ms ease, border-color 220ms ease, transform 220ms ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.glass-card::before {
-    content: "";
-    position: absolute;
-    inset: -1px;
-    border-radius: inherit;
-    background:
-        radial-gradient(900px 420px at 15% 10%, rgba(255, 255, 255, 0.14), transparent 55%),
-        radial-gradient(600px 360px at 80% 30%, rgba(180, 120, 255, 0.12), transparent 55%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 45%);
+#morphic-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 3;
     pointer-events: none;
-    opacity: 0.9;
 }
 
-.glass-card:hover {
-    border-color: rgba(210, 170, 255, 0.22);
-    box-shadow:
-        0 22px 70px rgba(0, 0, 0, 0.62),
-        0 0 0 1px rgba(160, 95, 255, 0.14) inset,
-        0 0 52px rgba(143, 61, 255, 0.28);
-}
-
-/* Typography */
-.hero {
-    text-align: center;
-    margin-bottom: 14px;
-}
-
-.brand {
-    margin: 0;
-    font-weight: 800;
-    letter-spacing: -0.04em;
-    line-height: 1.05;
-    font-size: clamp(38px, 5.2vw, 58px);
-
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(230, 210, 255, 0.82));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-
-    text-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-}
-
-.kicker {
-    margin: 10px 0 0;
-    font-size: 12px;
-    letter-spacing: 0.35em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.58);
-}
-
-.copy {
-    margin: 16px auto 22px;
-    max-width: 54ch;
-    text-align: center;
-    color: var(--muted);
-    font-size: clamp(14px, 1.7vw, 16px);
-    line-height: 1.7;
-}
-
-/* CTA */
-.actions {
-    display: flex;
-    justify-content: center;
-}
-
-.btn {
+/* =========================================
+   4. GLASSMORPHISM LAYOUT
+   ========================================= */
+.app-wrapper {
     position: relative;
-    border: 0;
+    z-index: 10;
+    height: 100vh;
+    width: 100vw;
+    padding: 25px;
+    display: flex;
+    perspective: 1500px;
+    /* Creates the 3D camera depth */
+}
+
+.glass-container {
+    width: 100%;
+    height: 100%;
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 3px solid var(--glass-border);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px var(--glass-shadow);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    /* REMOVED 'transform' from transition to stop it from fighting JavaScript */
+    transition: background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+
+    /* Hardware Acceleration Flags */
+    transform-style: preserve-3d;
+    will-change: transform;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    /* Forces the GPU to handle this layer */
+}
+
+.glass-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.glass-container::-webkit-scrollbar-thumb {
+    background: var(--accent-2);
+    border-radius: 10px;
+}
+
+.glass-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* =========================================
+   5. NAVIGATION
+   ========================================= */
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+    border-bottom: 1px solid var(--glass-border);
+    flex-shrink: 0;
+}
+
+/* New Brand & Tagline Layout */
+.brand-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+
+.brand-title {
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text-main);
+}
+
+.brand-tagline {
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.nav-actions {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.theme-toggle {
+    background: none;
+    border: none;
+    color: var(--text-main);
     cursor: pointer;
-    user-select: none;
-    padding: 12px 22px;
-    border-radius: 14px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-    font-size: 14px;
-    transition: transform 180ms ease, filter 180ms ease, box-shadow 180ms ease;
-    outline: none;
+    font-size: 1.2rem;
+    transition: transform 0.3s;
+    margin-right: 10px;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+}
+
+/* =========================================
+   6. UI COMPONENTS
+   ========================================= */
+.btn {
+    padding: 12px 28px;
+    border-radius: 100px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    border: 1px solid var(--glass-border);
+    text-align: center;
 }
 
 .btn-primary {
-    color: rgba(255, 255, 255, 0.95);
-    background: linear-gradient(135deg, var(--primary), var(--primary-2));
-    box-shadow:
-        0 12px 30px rgba(143, 61, 255, 0.30),
-        0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 8px 20px var(--glass-shadow);
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    filter: brightness(1.08);
+    box-shadow: 0 12px 25px var(--glass-shadow);
+    filter: brightness(1.1);
+}
+
+/* Force identical sizes for both Login and Register */
+.btn-outline {
+    background: transparent;
+    color: var(--text-main);
+    min-width: 125px;
+}
+
+.btn-outline:hover {
+    background: var(--card-bg);
+    border-color: var(--accent-1);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px var(--glass-shadow);
+}
+
+.gradient-text {
+    background: linear-gradient(to right, var(--accent-1), var(--accent-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.glass-card {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 30px;
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.glass-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--accent-1);
+    box-shadow: 0 10px 30px var(--glass-shadow);
+}
+
+/* =========================================
+   7. PAGE LAYOUTS
+   ========================================= */
+main {
+    flex: 1;
+    padding: clamp(20px, 5vw, 40px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 50px auto;
+}
+
+.hero h1 {
+    font-size: clamp(3rem, 6vw, 5.5rem);
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    line-height: 1.1;
+    margin-bottom: 20px;
+}
+
+.hero p {
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    color: var(--text-muted);
+    margin-bottom: 40px;
+}
+
+.hero-ctas {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+/* About Page Grids */
+.about-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 40px;
+    margin-bottom: 60px;
+}
+
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.team-member {
+    text-align: center;
+}
+
+.team-member .avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--bg-3), var(--accent-1));
+    margin: 0 auto 15px;
+    border: 2px solid var(--glass-border);
+}
+
+.team-member h3 {
+    font-size: 1.3rem;
+    margin-bottom: 5px;
+}
+
+.team-member .role {
+    color: var(--accent-1);
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.mentor-card {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.mentor-card .avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    border: 2px solid var(--glass-border);
+    flex-shrink: 0;
+}
+
+/* Contact Link Cards */
+.contact-links {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    max-width: 350px;
+    margin-top: 40px;
+}
+
+.contact-links a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    padding: 18px;
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
+.contact-links a:hover {
+    border-color: var(--accent-1);
+    transform: scale(1.02);
+    box-shadow: 0 10px 30px var(--glass-shadow);
+}
+
+.contact-links svg {
+    color: var(--accent-1);
+}
+
+/* Workflow Grid */
+.workflow-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+    max-width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.workflow-step {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.step-number {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 15px var(--glass-shadow);
+}
+
+/* =========================================
+   8. THE APPLE LIQUID GLASS DROP RIBBON
+   ========================================= */
+.bottom-ribbon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    padding: 16px 48px;
+    margin: 0 auto;
+    border-radius: 100px;
+
+    /* Liquid Physics: High blur + 200% color saturation */
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(40px) saturate(200%);
+    -webkit-backdrop-filter: blur(40px) saturate(200%);
+
+    /* The 3D Liquid Edge: Outer drop shadow + Inner white light reflection */
+    border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow:
-        0 18px 42px rgba(143, 61, 255, 0.38),
-        0 0 0 1px rgba(255, 255, 255, 0.16) inset;
+        0 20px 40px rgba(0, 0, 0, 0.15),
+        inset 0 1px 1px rgba(255, 255, 255, 0.3);
+
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.btn-primary:active {
-    transform: translateY(0px) scale(0.99);
-    filter: brightness(1.02);
-}
-
-.btn-primary:focus-visible {
+/* Light Mode specific liquid settings (like iOS) */
+[data-theme="light"] .bottom-ribbon {
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.6);
     box-shadow:
-        0 18px 42px rgba(143, 61, 255, 0.38),
-        0 0 0 2px rgba(255, 255, 255, 0.24),
-        0 0 0 6px rgba(143, 61, 255, 0.18);
+        0 20px 40px rgba(120, 80, 255, 0.05),
+        inset 0 1px 2px rgba(255, 255, 255, 0.9);
 }
 
-.btn-glow {
+.bottom-ribbon:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow:
+        0 25px 50px rgba(0, 0, 0, 0.2),
+        inset 0 1px 1px rgba(255, 255, 255, 0.5);
+    border-color: rgba(124, 92, 255, 0.5);
+}
+
+.bottom-ribbon a {
+    font-weight: 600;
+    font-size: 1.125rem;
+    color: var(--text-muted);
+    transition: color 0.3s ease;
+    position: relative;
+}
+
+.bottom-ribbon a:hover,
+.bottom-ribbon a.active {
+    color: var(--text-main);
+}
+
+.bottom-ribbon a::after {
+    content: '';
     position: absolute;
-    inset: -2px;
-    border-radius: inherit;
+    width: 0;
+    height: 2px;
+    bottom: -4px;
+    left: 0;
+    background: var(--accent-1);
+    transition: width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.bottom-ribbon a:hover::after,
+.bottom-ribbon a.active::after {
+    width: 100%;
+}
+
+/* =========================================
+   9. FOOTER & MEDIA QUERIES
+   ========================================= */
+footer {
+    width: 100%;
+    padding: 30px 20px;
+    text-align: center;
+    border-top: 1px solid var(--glass-border);
+    color: var(--text-muted);
+    font-size: 1rem;
+    flex-shrink: 0;
+    margin-top: auto;
+}
+
+/* =========================================
+   10. JOB RECOMMENDATION MODAL CHOREOGRAPHY
+   ========================================= */
+
+/* 1. Header Sliding Up */
+.hero-text {
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease;
+}
+
+.hero-text.shift-up {
+    transform: translateY(-40px);
+    opacity: 0.4;
+}
+
+/* 2. Resume Button Sliding Down */
+/* 2. Resume Button Sliding Down */
+.btn-resume {
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* When the Job Card expands, this class is added to the Resume button via JS */
+#btn-resume.shift-down {
+    transform: translateY(30px) scale(0.9);
+    /* Moves down and shrinks slightly */
+    opacity: 0.5;
+    /* Dims it so focus remains on the job results */
+    filter: blur(1px);
+    /* Optional: adds a slight depth-of-field effect */
     pointer-events: none;
-    background: radial-gradient(140px 60px at 30% 30%, rgba(255, 255, 255, 0.25), transparent 60%);
-    opacity: 0.55;
-    mix-blend-mode: screen;
+    /* Optional: prevents clicks while the dashboard is open */
 }
 
-/* Micro dots */
-.micro {
+
+/* 3. The Morphing Job Button */
+.job-card {
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    color: #fff;
+    border-radius: 100px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 8px 20px var(--glass-shadow);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Starting Dimensions (Looks like a normal button) */
+    width: 260px;
+    height: 58px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid transparent;
+}
+
+.job-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px var(--glass-shadow);
+}
+
+/* Expanded State (The Horizontal Card) */
+.job-card.expanded {
+    width: 100%;
+    max-width: 800px;
+    /* The horizontal width */
+    height: 250px;
+    /* Fits the dropzone */
+    border-radius: 30px;
+    background: var(--card-bg);
+    border: 1px solid var(--accent-1);
+    cursor: default;
+    box-shadow: 0 20px 50px var(--glass-shadow);
+    transform: translateY(0);
+}
+
+/* 4. Fading the Content In and Out */
+.job-card-title {
     position: absolute;
-    left: 16px;
-    top: 16px;
-    display: inline-flex;
-    gap: 8px;
-    opacity: 0.85;
+    transition: opacity 0.3s ease;
+    white-space: nowrap;
 }
 
-.micro .dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.18);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: 0 0 18px rgba(143, 61, 255, 0.16);
+.job-card.expanded .job-card-title {
+    opacity: 0;
+    pointer-events: none;
 }
 
-@media (max-width: 420px) {
-    .glass-card {
-        border-radius: 18px;
+.job-upload-ui {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 30px;
+    text-align: center;
+}
+
+.job-card.expanded .job-upload-ui {
+    opacity: 1;
+    pointer-events: auto;
+    transition-delay: 0.3s;
+    /* Waits for the box to expand before showing text */
+}
+
+.drop-zone:hover {
+    border-color: var(--accent-1) !important;
+    background: rgba(124, 92, 255, 0.1) !important;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 900px) {
+    .team-grid {
+        grid-template-columns: 1fr;
     }
 
-    .kicker {
-        letter-spacing: 0.28em;
+    .mentor-card {
+        flex-direction: column;
+        text-align: center;
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
-    #bgfx {
-        display: none;
-    }
-
-    body {
-        background: radial-gradient(1000px 700px at 20% 20%, rgba(165, 85, 255, 0.18), transparent 60%),
-            linear-gradient(135deg, #05040b 0%, #0b0616 40%, #120622 70%, #07030d 100%);
+@media (max-width: 768px) {
+    .bottom-ribbon {
+        gap: 20px;
+        padding: 15px 25px;
+        flex-wrap: wrap;
     }
 }

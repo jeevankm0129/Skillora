@@ -1,80 +1,86 @@
-from sqlalchemy.orm import Session
+from typing import Optional, Sequence
+
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 from database import models
 
 
-def get_user_by_telegram_id(db: Session, telegram_id: int):
-    return db.query(models.User).filter(models.User.telegram_id == telegram_id).first()
+# FIXED: Added Optional to allow None values without angering the type checker
+async def get_or_create_user_by_platform_id(
+    db: AsyncSession, telegram_id: Optional[int] = None, whatsapp_id: Optional[str] = None
+) -> models.User:
+    """Finds a user by their platform ID, or creates them if they don't exist."""
 
+    # Explicitly check for None to make the linter happy
+    if telegram_id is not None:
+        stmt = select(models.User).where(models.User.telegram_id == telegram_id)
+    elif whatsapp_id is not None:
+        stmt = select(models.User).where(models.User.whatsapp_id == whatsapp_id)
+    else:
+        raise ValueError("Must provide either telegram_id or whatsapp_id")
 
-def create_user(db: Session, telegram_id: int):
-    user = models.User(telegram_id=telegram_id)
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+    result = await db.execute(stmt)
+    user = result.scalars().first()
+
+    if not user:
+        user = models.User(telegram_id=telegram_id, whatsapp_id=whatsapp_id)
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+
     return user
 
 
-def update_user_email(db: Session, telegram_id: int, email: str):
-    user = get_user_by_telegram_id(db, telegram_id)
-    if user:
-        user.email = email.strip()
-        user.notify_by_email = True
-        db.commit()
-        db.refresh(user)
-    return user
+async def update_user_email(
+    db: AsyncSession,
+    email: str,
+    telegram_id: Optional[int] = None,
+    whatsapp_id: Optional[str] = None,
+):
+    user = await get_or_create_user_by_platform_id(db, telegram_id, whatsapp_id)
+    user.email = email
+    user.notify_by_email = True
+    await db.commit()
 
 
-def save_resume(db: Session, user_id: int, text_content: str, parsed_json: str | None = None):
-    resume = db.query(models.Resume).filter(models.Resume.user_id == user_id).first()
+async def enable_background_tracking(
+    db: AsyncSession, telegram_id: Optional[int] = None, whatsapp_id: Optional[str] = None
+):
+    user = await get_or_create_user_by_platform_id(db, telegram_id, whatsapp_id)
+    user.background_tracking_enabled = True
+    await db.commit()
+
+
+async def save_resume_text(
+    db: AsyncSession,
+    text_content: str,
+    telegram_id: Optional[int] = None,
+    whatsapp_id: Optional[str] = None,
+):
+    user = await get_or_create_user_by_platform_id(db, telegram_id, whatsapp_id)
+
+    stmt = select(models.Resume).where(models.Resume.user_id == user.id)
+    result = await db.execute(stmt)
+    resume = result.scalars().first()
 
     if resume:
         resume.text_content = text_content
-        resume.parsed_json = parsed_json
     else:
-        resume = models.Resume(
-            user_id=user_id,
-            text_content=text_content,
-            parsed_json=parsed_json,
-        )
+        resume = models.Resume(user_id=user.id, text_content=text_content)
         db.add(resume)
 
-    db.commit()
-    return resume
+    await db.commit()
 
 
-def get_or_create_skill(db: Session, skill_name: str):
-    if not skill_name:
-        return None
-
-    skill_name = " ".join(skill_name.strip().split())
-    if not skill_name:
-        return None
-
-    skill = db.query(models.Skill).filter(models.Skill.name == skill_name).first()
-
-    if not skill:
-        skill = models.Skill(name=skill_name)
-        db.add(skill)
-        db.flush()
-
-    return skill
-
-
-def link_skills_to_user(db: Session, user_id: int, skill_names: list[str]):
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not user:
-        return
-
-    user.skills.clear()
-
-    for name in skill_names:
-        skill = get_or_create_skill(db, name)
-        if skill:
-            user.skills.append(skill)
-
-    db.commit()
-
-
-def get_users_for_notification(db: Session):
-    return db.query(models.User).filter(models.User.notify_by_email.is_(True)).all()
+# FIXED: Changed the return type hint to Sequence to match SQLAlchemy's output
+async def get_users_for_background_check(db: AsyncSession) -> Sequence[models.User]:
+    """Fetches users who are actively looking for jobs."""
+    stmt = (
+        select(models.User)
+        .options(selectinload(models.User.resume))
+        .where(models.User.background_tracking_enabled == True)
+    )
+    result = await db.execute(stmt)
+    return result.scalars().all()

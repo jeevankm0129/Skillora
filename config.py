@@ -1,69 +1,42 @@
-# =========================================
-# ENV LOADING (MUST BE FIRST)
-# =========================================
-from dotenv import load_dotenv
-
-load_dotenv()
-
 import os
 
-# =========================================
-# ENV / APP
-# =========================================
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
 ENV = os.getenv("ENV", "development")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
 # =========================================
 # DATABASE
 # =========================================
-DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL is required but not set.")
+# We enforce aiosqlite for non-blocking database operations
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./skillora.db")
+if not DATABASE_URL.startswith("sqlite+aiosqlite") and not DATABASE_URL.startswith(
+    "postgresql+asyncpg"
+):
+    raise RuntimeError("DATABASE_URL must use an async driver (e.g., sqlite+aiosqlite:///...)")
 
 # =========================================
-# TELEGRAM
+# TELEGRAM & WHATSAPP
 # =========================================
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 if not TELEGRAM_BOT_TOKEN:
-    raise RuntimeError("TELEGRAM_BOT_TOKEN is required but not set.")
+    raise ValueError("TELEGRAM_BOT_TOKEN is not set in the .env file")
+
+# Placeholders for future Meta API integration
+WHATSAPP_VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN", "SKILLORA_SECRET_TOKEN_123")
+WHATSAPP_API_TOKEN = os.getenv("WHATSAPP_API_TOKEN", "")
 
 # =========================================
-# FEATURE FLAGS
+# EMAIL / SMTP (For Background Alerts)
 # =========================================
-ENABLE_BACKGROUND_JOB_MATCHING = (
-    os.getenv("ENABLE_BACKGROUND_JOB_MATCHING", "true").lower() == "true"
-)
-
-ENABLE_EMAIL_NOTIFICATIONS = os.getenv("ENABLE_EMAIL_NOTIFICATIONS", "false").lower() == "true"
-
-# =========================================
-# EMAIL / SMTP
-# =========================================
-SMTP_SERVER = os.getenv("SMTP_SERVER", "")
+ENABLE_EMAIL_NOTIFICATIONS = os.getenv("ENABLE_EMAIL_NOTIFICATIONS", "true").lower() == "true"
+SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_EMAIL = os.getenv("SMTP_EMAIL", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 
-if ENABLE_EMAIL_NOTIFICATIONS:
-    missing = []
-    if not SMTP_SERVER:
-        missing.append("SMTP_SERVER")
-    if not SMTP_EMAIL:
-        missing.append("SMTP_EMAIL")
-    if not SMTP_PASSWORD:
-        missing.append("SMTP_PASSWORD")
-    if missing:
-        raise RuntimeError(f"Email notifications enabled but missing config: {', '.join(missing)}")
-
-# =========================================
-# OCR SETTINGS (optional)
-# =========================================
-# If tesseract isn’t on PATH (Windows), set this in .env:
-# TESSERACT_CMD=C:\Program Files\Tesseract-OCR\tesseract.exe
-#TESSERACT_CMD = os.getenv("TESSERACT_CMD", "")
-#OCR_LANG = os.getenv("OCR_LANG", "eng")
-
-# =========================================
-# Skill dictionary path
-# =========================================
-SKILLS_FILE_PATH = os.getenv("SKILLS_FILE_PATH", "data/skills.txt")
+if ENABLE_EMAIL_NOTIFICATIONS and not all([SMTP_SERVER, SMTP_EMAIL, SMTP_PASSWORD]):
+    print("WARNING: Email notifications enabled but SMTP credentials are missing.")

@@ -1,95 +1,99 @@
-import asyncio
-import json
-from typing import Any, Union
+import io
+import logging
+import os
+import re
+from typing import List
 
-import httpx
+import pdfplumber
+from rapidfuzz import fuzz, process
 
-from config import HF_API_TOKEN, HF_MODEL
+logger = logging.getLogger(__name__)
 
-BASE_URL = "https://router.huggingface.co/v1"
-TIMEOUT = 90
-RETRIES = 2
+_cached_skills: List[str] = []
 
 
-def _safe_json_parse(output: str) -> Any:
-    output = output.strip()
+def _load_skills_from_file() -> List[str]:
+    """Caches the skills.txt file in memory for instant access."""
+    global _cached_skills
+    if _cached_skills:
+        return _cached_skills
 
-    # Direct JSON
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    skills_file_path = os.path.join(base_dir, "data", "skills.txt")
+
     try:
-        return json.loads(output)
-    except json.JSONDecodeError:
-        pass
+        with open(skills_file_path, "r", encoding="utf-8") as f:
+            _cached_skills = [line.strip().lower() for line in f if line.strip()]
+        logger.info(f"Successfully loaded {len(_cached_skills)} skills from data/skills.txt")
+    except FileNotFoundError:
+        logger.error(f"CRITICAL: Could not find {skills_file_path}.")
+        _cached_skills = ["python", "java", "javascript", "react", "sql"]
 
-    # Extract first {...} or [...]
-    obj_start = output.find("{")
-    obj_end = output.rfind("}") + 1
-    arr_start = output.find("[")
-    arr_end = output.rfind("]") + 1
-
-    candidates = []
-    if obj_start != -1 and obj_end > obj_start:
-        candidates.append(output[obj_start:obj_end])
-    if arr_start != -1 and arr_end > arr_start:
-        candidates.append(output[arr_start:arr_end])
-
-    for c in candidates:
-        try:
-            return json.loads(c)
-        except json.JSONDecodeError:
-            continue
-
-    raise ValueError(f"Invalid JSON returned by model. Output:\n{output[:800]}")
+    return _cached_skills
 
 
-def _model_for_hf_inference(model_id: str) -> str:
-    # For hf-inference provider, router expects "model:provider"
-    # If user already set a provider suffix, keep it.
-    if ":" in model_id:
-        return model_id
-    return f"{model_id}:hf-inference"
-
-
-async def call_llm(prompt: str, expect_json: bool = False) -> Union[str, Any]:
+async def extract_text_from_pdf(pdf_bytes: bytearray) -> str:
     """
-    HuggingFace Inference Providers via OpenAI-compatible Chat Completions.
+    Physically rips the text out of the uploaded PDF file using pdfplumber.
     """
-    headers = {
-        "Authorization": f"Bearer {HF_API_TOKEN}",
-        "Content-Type": "application/json",
-    }
+    text = ""
+    try:
+        # pdfplumber reads the raw byte stream directly from Telegram
+        with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
+            for page in pdf.pages:
+                extracted = page.extract_text()
+                if extracted:
+                    text += extracted + "\n"
+        logger.info("Successfully extracted text from actual PDF.")
+        return text
+    except Exception as e:
+        logger.error(f"Failed to parse PDF: {e}")
+        return ""
 
-    payload = {
-        "model": _model_for_hf_inference(HF_MODEL),
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.2,
-        "max_tokens": 800,
-        "stream": False,
-    }
 
-    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-        for attempt in range(RETRIES):
-            try:
-                resp = await client.post(
-                    f"{BASE_URL}/chat/completions", headers=headers, json=payload
-                )
+def _llm_semantic_reasoning_placeholder(text: str):
+    """
+    PLACEHOLDER: The heavy Google LLM has been removed to maximize speed.
+    This function remains as an architectural stub for future API integration.
+    """
+    pass
 
-                if resp.status_code >= 400:
-                    raise RuntimeError(f"HF error {resp.status_code}: {resp.text[:600]}")
 
-                data = resp.json()
-                # OpenAI-compatible shape
-                output = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-                output = str(output).strip()
+async def extract_skills_locally(resume_text: str) -> List[str]:
+    """
+    Lightning-fast rule-based and fuzzy extraction.
+    """
+    if not resume_text:
+        return []
 
-                if not output:
-                    raise ValueError("Empty response from HuggingFace")
+    skills_to_check = _load_skills_from_file()
+    found_skills = set()
+    text_lower = resume_text.lower()
 
-                if expect_json:
-                    return _safe_json_parse(output)
+    # 1. Lightning-Fast Exact Match (Handles 90% of cases perfectly)
+    for skill in skills_to_check:
+        # \b ensures we match exact words (e.g., 'java' won't trigger on 'javascript')
+        pattern = r"\b" + re.escape(skill) + r"\b"
+        if re.search(pattern, text_lower):
+            found_skills.add(skill.title())
 
-                return output
+    # 2. RapidFuzz Pass (Catches typos like "pyhton" or "javascrip")
+    # We extract all unique alphanumeric words from the resume to compare
+    unique_resume_words = list(set(re.findall(r"\b[a-z0-9+#.-]+\b", text_lower)))
 
-            except Exception as e:
-                if attempt == RETRIES - 1:
-                    raise RuntimeError(f"HuggingFace call failed: {e}")
-                await asyncio.sleep(1)
+    for skill in skills_to_check:
+        if skill.title() in found_skills:
+            continue  # Skip if we already found it exactly
+
+        # Only fuzzy match single words to keep it incredibly fast
+        if " " not in skill:
+            # WRatio is highly optimized for comparing strings of different lengths
+            match = process.extractOne(
+                skill, unique_resume_words, scorer=fuzz.WRatio, score_cutoff=88
+            )
+            if match:
+                found_skills.add(skill.title())
+
+    final_skills = list(found_skills)
+    logger.info(f"RapidFuzz extracted skills: {final_skills}")
+    return final_skills

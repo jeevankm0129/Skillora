@@ -1,4 +1,5 @@
 import logging
+from typing import Any, Dict, List
 
 from .base_scraper import BaseScraper
 
@@ -6,13 +7,9 @@ logger = logging.getLogger(__name__)
 
 
 class LinkedinScraper(BaseScraper):
-    """
-    Scraper for LinkedIn.
-    Currently a placeholder. LinkedIn scraping is complex and often requires
-    Selenium or an official API to avoid immediate IP bans.
-    """
+    source_name = "LinkedIn"
 
-    async def search(self, keywords: list[str]) -> list[dict]:
-        """Placeholder for LinkedIn search."""
-        logger.info("LinkedIn scraper called (Not implemented yet).")
+    async def fetch_jobs(self, keywords: List[str], limit: int = 10) -> List[Dict[str, Any]]:
+        # TODO: Implement official LinkedIn API or authenticated proxy request here
+        logger.info(f"{self.source_name} API placeholder called with keywords: {keywords}")
         return []

@@ -1,48 +1,156 @@
-Postman
-Charles Proxy
-Android Studio
-Xcode
-BrowserStack
-Jira
-Confluence
-TestRail
-Jenkins
-Git
-Bitbucket
-SQL
-GraphQL
-Swagger
-SoapUI
-DevTools
-Selenium
-Selenium WebDriver
-Appium
-Software Development
-Object Oriented Programming
-Data Structures and Algorithms
-DSA
-Backend
-Development
-API Development
-RESTful API Design
-Database Design
-SQL Querying
-Version Control
-Debugging
-Performance Optimization
-Unit & Integration Testing
-Agile Methodology
-Collaboration
-Azure DevOps
-Kibana
-Sentry
-TestLink
-qTest
-Qase
-X-Ray
-HP ALM
-REST
-API Testing
-Manual Testing
-Mobile Testing
-Integration Testing
+python
+java
+javascript
+typescript
+c++
+c#
+ruby
+php
+go
+golang
+rust
+swift
+kotlin
+dart
+r
+scala
+html
+css
+react
+react native
+angular
+vue
+vue.js
+svelte
+next.js
+nuxt.js
+bootstrap
+tailwind
+node
+node.js
+express
+django
+flask
+fastapi
+spring
+spring boot
+.net
+asp.net
+ruby on rails
+laravel
+graphql
+rest
+restful api
+sql
+sql querying
+mysql
+postgresql
+postgres
+mongodb
+redis
+cassandra
+dynamodb
+mariadb
+oracle
+elasticsearch
+firebase
+supabase
+aws
+azure
+gcp
+google cloud
+docker
+kubernetes
+terraform
+ansible
+jenkins
+github actions
+gitlab ci
+azure devops
+linux
+bash
+shell
+nginx
+apache
+ios
+android
+android studio
+xcode
+flutter
+machine learning
+deep learning
+artificial intelligence
+data science
+data analysis
+pandas
+numpy
+scikit-learn
+tensorflow
+pytorch
+hadoop
+spark
+kafka
+airflow
+git
+github
+gitlab
+bitbucket
+version control
+jira
+confluence
+agile
+scrum
+kanban
+ci/cd
+tdd
+microservices
+serverless
+selenium
+selenium webdriver
+cypress
+jest
+mocha
+pytest
+junit
+appium
+postman
+charles proxy
+browserstack
+testrail
+testlink
+qtest
+qase
+x-ray
+hp alm
+swagger
+soapui
+devtools
+kibana
+sentry
+api testing
+manual testing
+mobile testing
+unit testing
+integration testing
+debugging
+performance optimization
+backend
+api development
+database design
+object oriented programming
+oop
+data structures and algorithms
+dsa
+oauth
+jwt
+json
+websockets
+figma
+ui/ux
+blockchain
+web3
+solidity
+databricks
+snowflake
+tableau
+power bi

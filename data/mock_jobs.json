@@ -1,0 +1,178 @@
+[
+    {
+        "title": "Backend Developer",
+        "company": "TechNova Solutions",
+        "location": "Bangalore, India",
+        "link": "https://mockjobs.com/job/1",
+        "description": "Looking for Backend Developer with Python, Django, REST APIs, SQL, Git experience.",
+        "source": "Mock"
+    },
+    {
+        "title": "Python Developer",
+        "company": "CodeAxis",
+        "location": "Hyderabad, India",
+        "link": "https://mockjobs.com/job/2",
+        "description": "Python, Flask, API integration, PostgreSQL, Docker required.",
+        "source": "Mock"
+    },
+    {
+        "title": "Full Stack Engineer",
+        "company": "ByteForge",
+        "location": "Remote",
+        "link": "https://mockjobs.com/job/3",
+        "description": "React, Node.js, REST APIs, SQL, Git.",
+        "source": "Mock"
+    },
+    {
+        "title": "Software Engineer",
+        "company": "CloudNest",
+        "location": "Chennai, India",
+        "link": "https://mockjobs.com/job/4",
+        "description": "Java, Spring Boot, Microservices, MySQL, AWS.",
+        "source": "Mock"
+    },
+    {
+        "title": "Junior Python Developer",
+        "company": "DevSphere",
+        "location": "Pune, India",
+        "link": "https://mockjobs.com/job/5",
+        "description": "Entry level Python, Django, REST API knowledge required.",
+        "source": "Mock"
+    },
+    {
+        "title": "Data Analyst",
+        "company": "InsightIQ",
+        "location": "Bangalore, India",
+        "link": "https://mockjobs.com/job/6",
+        "description": "SQL, Excel, Power BI, Python for data analysis.",
+        "source": "Mock"
+    },
+    {
+        "title": "Machine Learning Engineer",
+        "company": "AI Labs",
+        "location": "Remote",
+        "link": "https://mockjobs.com/job/7",
+        "description": "Python, Scikit-learn, TensorFlow, NLP, Deep Learning.",
+        "source": "Mock"
+    },
+    {
+        "title": "Data Scientist",
+        "company": "Predicta",
+        "location": "Hyderabad, India",
+        "link": "https://mockjobs.com/job/8",
+        "description": "Python, Pandas, ML models, Statistics, SQL.",
+        "source": "Mock"
+    },
+    {
+        "title": "AI Engineer",
+        "company": "NeuronStack",
+        "location": "Remote",
+        "link": "https://mockjobs.com/job/9",
+        "description": "Transformers, NLP, PyTorch, LLM integration.",
+        "source": "Mock"
+    },
+    {
+        "title": "Business Intelligence Analyst",
+        "company": "DataBridge",
+        "location": "Mumbai, India",
+        "link": "https://mockjobs.com/job/10",
+        "description": "Power BI, SQL, Tableau, reporting dashboards.",
+        "source": "Mock"
+    },
+    {
+        "title": "QA Engineer",
+        "company": "QualityWorks",
+        "location": "Chennai, India",
+        "link": "https://mockjobs.com/job/11",
+        "description": "Manual Testing, Postman, API Testing, SQL.",
+        "source": "Mock"
+    },
+    {
+        "title": "Automation Test Engineer",
+        "company": "TestPro",
+        "location": "Bangalore, India",
+        "link": "https://mockjobs.com/job/12",
+        "description": "Selenium, Java, TestNG, Jenkins.",
+        "source": "Mock"
+    },
+    {
+        "title": "Mobile QA Tester",
+        "company": "AppSphere",
+        "location": "Hyderabad, India",
+        "link": "https://mockjobs.com/job/13",
+        "description": "Android Studio, Postman, API Testing, Charles Proxy.",
+        "source": "Mock"
+    },
+    {
+        "title": "QA Analyst",
+        "company": "BugTrackers",
+        "location": "Remote",
+        "link": "https://mockjobs.com/job/14",
+        "description": "Manual Testing, Jira, TestRail, Regression testing.",
+        "source": "Mock"
+    },
+    {
+        "title": "Automation Engineer",
+        "company": "AutoFlow",
+        "location": "Pune, India",
+        "link": "https://mockjobs.com/job/15",
+        "description": "Python, Selenium, API automation, Git.",
+        "source": "Mock"
+    },
+    {
+        "title": "DevOps Engineer",
+        "company": "CloudOps",
+        "location": "Bangalore, India",
+        "link": "https://mockjobs.com/job/16",
+        "description": "AWS, Docker, Kubernetes, CI/CD, Jenkins.",
+        "source": "Mock"
+    },
+    {
+        "title": "Cloud Engineer",
+        "company": "InfraStack",
+        "location": "Remote",
+        "link": "https://mockjobs.com/job/17",
+        "description": "Azure, AWS, Terraform, Kubernetes.",
+        "source": "Mock"
+    },
+    {
+        "title": "Site Reliability Engineer",
+        "company": "ScaleGrid",
+        "location": "Mumbai, India",
+        "link": "https://mockjobs.com/job/18",
+        "description": "Monitoring, Linux, CI/CD, Docker.",
+        "source": "Mock"
+    },
+    {
+        "title": "Frontend Developer",
+        "company": "UIForge",
+        "location": "Hyderabad, India",
+        "link": "https://mockjobs.com/job/19",
+        "description": "React, JavaScript, HTML, CSS.",
+        "source": "Mock"
+    },
+    {
+        "title": "React Developer",
+        "company": "WebCore",
+        "location": "Remote",
+        "link": "https://mockjobs.com/job/20",
+        "description": "React, Redux, REST APIs, Git.",
+        "source": "Mock"
+    },
+    {
+        "title": "Software Developer Trainee",
+        "company": "NextGen Tech",
+        "location": "Bangalore, India",
+        "link": "https://mockjobs.com/job/21",
+        "description": "Basic Python, SQL, problem solving.",
+        "source": "Mock"
+    },
+    {
+        "title": "Graduate Engineer Trainee",
+        "company": "InnovateX",
+        "location": "Chennai, India",
+        "link": "https://mockjobs.com/job/22",
+        "description": "C++, Java, OOPS fundamentals.",
+        "source": "Mock"
+    }
+]

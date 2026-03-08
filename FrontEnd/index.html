@@ -1,43 +1,99 @@
-<!-- index.html -->
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="theme-color" content="#0b0714" />
-    <title>Skillora • AI Skill Intelligence</title>
-    <link rel="stylesheet" href="styles.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skillora | AI Career Architect</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <!-- Interactive procedural background -->
-    <canvas id="bgfx" aria-hidden="true"></canvas>
 
-    <main class="stage">
-        <section class="glass-card" id="glassCard">
-            <header class="hero">
-                <h1 class="brand">Skillora</h1>
-                <p class="kicker">AI SKILL INTELLIGENCE</p>
-            </header>
+    <div class="layer-1-bg"></div>
+    <div class="layer-2-stars"></div>
+    <canvas id="morphic-canvas"></canvas>
 
-            <p class="copy">
-                Harness autonomous intelligence to map, track, and amplify human potential.
-                Skillora detects micro-trends and evolves your workflow in real time.
-            </p>
+    <div class="app-wrapper">
+        <div class="glass-container">
 
-            <div class="actions">
-                <button class="btn btn-primary" id="ctaBtn" type="button">
-                    Initialize Bot
-                    <span class="btn-glow" aria-hidden="true"></span>
-                </button>
-            </div>
+            <nav>
+                <div class="brand-group">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#purple-grad)"
+                        stroke-width="2.5">
+                        <linearGradient id="purple-grad">
+                            <stop offset="0%" stop-color="#7c5cff" />
+                            <stop offset="100%" stop-color="#a78bfa" />
+                        </linearGradient>
+                        <path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13.5H5.5L12 6.5z" />
+                    </svg>
+                    <div class="brand-text">
+                        <span class="brand-title">Skillora</span>
+                        <span class="brand-tagline">AI Skill Intelligence</span>
+                    </div>
+                </div>
 
-            <div class="micro" aria-hidden="true">
-                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-            </div>
-        </section>
-    </main>
+                <div class="nav-actions">
+                    <button id="theme-toggle" class="theme-toggle">☀️</button>
+                    <a href="#" class="btn btn-primary">Login</a>
+                    <a href="#" class="btn btn-primary">Register</a>
+                </div>
+            </nav>
+
+            <main>
+                <section class="hero">
+
+                    <div class="hero-text" id="hero-text">
+                        <h1>Skillora <br><span class="gradient-text">AI Skill Intelligence</span></h1>
+                        <p>Upload your resume. Generate perfect ATS documents. Match instantly with premium live tech
+                            roles using our next-generation semantic engine.</p>
+                    </div>
+
+                    <div class="hero-ctas"
+                        style="position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 20px;">
+
+                        <div class="job-card" id="job-card" onclick="expandJobCard()">
+                            <span class="job-card-title">Job Recommendations</span>
+
+                            <div class="job-upload-ui">
+                                <h3 class="gradient-text" style="font-size: 1.5rem; margin-bottom: 10px;">Semantic Match
+                                    Engine</h3>
+                                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Drag and
+                                    drop your PDF resume to initiate extraction.</p>
+
+                                <div class="drop-zone" id="drop-zone" onclick="document.getElementById('resume-upload').click()" style="width: 100%; border: 2px dashed var(--glass-border); border-radius: 12px; padding: 30px; background: rgba(0,0,0,0.1); cursor: pointer; transition: all 0.3s; position: relative;">
+                  <span id="drop-zone-text">Click to Upload PDF Document</span>
+
+                  <input type="file" id="resume-upload" accept=".pdf" style="display: none;" onchange="handleFileUpload(event)">
+
+                  <div id="scan-line" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--accent-1); box-shadow: 0 0 10px var(--accent-1); transition: top 1s linear;"></div>
+                </div>
+
+                                <button class="btn btn-outline"
+                                    style="margin-top: 20px; padding: 8px 20px; min-width: 100px; font-size: 0.85rem;"
+                                    onclick="closeJobCard(event)">Cancel</button>
+                            </div>
+                        </div>
+
+                        <a href="#" class="btn btn-primary btn-resume" id="btn-resume"
+                            style="padding: 16px 32px; font-size: 1.1rem; min-width: 250px;" onclick="redirectToTelegramResume()">
+                            Resume Generation
+                        </a>
+                    </div>
+                </section>
+
+                <div class="bottom-ribbon">
+                    <a href="index.html" class="active">Home</a>
+                    <a href="about.html">About Us</a>
+                    <a href="contact.html">Contact</a>
+                    <a href="how-it-works.html">How it Works</a>
+                </div>
+            </main>
+
+            <footer>&copy; 2026 Skillora AI. Engineered for the future.</footer>
+
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>

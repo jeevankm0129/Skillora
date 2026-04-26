@@ -1,158 +1,146 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" data-theme="dark">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="How Skillora works — a seamless 5-step pipeline from resume upload to ATS-optimised document generation and live job matching."
+    />
     <title>How it Works | Skillora</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-        /* Custom horizontal scrollbar specifically for the timeline */
-        .timeline-container::-webkit-scrollbar {
-            height: 8px;
-        }
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
 
-        .timeline-container::-webkit-scrollbar-thumb {
-            background: var(--accent-1);
-            border-radius: 10px;
-        }
-
-        .timeline-container::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-        }
-    </style>
-</head>
-
-<body>
-
+  <body>
     <div class="layer-1-bg"></div>
     <div class="layer-2-stars"></div>
+    <div id="celestial-orb"></div>
     <canvas id="morphic-canvas"></canvas>
 
-    <div class="app-wrapper" style="padding: 20px;">
-        <div class="glass-container">
+    <div class="app-wrapper" style="padding: 20px">
+      <div class="glass-container page-scroll">
+        <nav>
+          <div class="brand-group">
+            <svg
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="url(#purple-grad)"
+              stroke-width="2.5"
+            >
+              <defs>
+                <linearGradient id="purple-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#7c5cff" />
+                  <stop offset="100%" stop-color="#a78bfa" />
+                </linearGradient>
+              </defs>
+              <path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13.5H5.5L12 6.5z" />
+            </svg>
+            <div class="brand-text">
+              <span class="brand-title">Skillora</span>
+              <span class="brand-tagline">AI Career Architect</span>
+            </div>
+          </div>
+          <div class="nav-actions">
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+              ☀️
+            </button>
+            <a href="#" class="btn btn-outline">Login</a>
+            <a href="#" class="btn btn-primary">Register</a>
+          </div>
+        </nav>
 
-            <nav>
-                <div class="brand-group">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#purple-grad)"
-                        stroke-width="2.5">
-                        <linearGradient id="purple-grad">
-                            <stop offset="0%" stop-color="#7c5cff" />
-                            <stop offset="100%" stop-color="#a78bfa" />
-                        </linearGradient>
-                        <path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13.5H5.5L12 6.5z" />
-                    </svg>
-                    <div class="brand-text">
-                        <span class="brand-title">Skillora</span>
-                        <span class="brand-tagline">AI Career Architect</span>
-                    </div>
+        <main style="justify-content: flex-start; padding: 0 20px 36px">
+          <div style="width: 100%">
+            <!-- Page Hero -->
+            <div class="page-hero sr">
+              <h1>The Intelligence <span class="gradient-text">Flow</span></h1>
+              <p>
+                A seamless pipeline from raw data to career opportunities — watch the AI
+                think.
+              </p>
+            </div>
+
+            <!-- Timeline -->
+            <div class="timeline-container">
+              <div class="workflow-step sr sr-delay-1">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                  <h3 class="gradient-text">Initialize Bot</h3>
+                  <p>
+                    Launch the Skillora intelligence engine directly inside your preferred
+                    messaging app — currently supporting both WhatsApp and Telegram.
+                  </p>
                 </div>
-                <div class="nav-actions">
-                    <button id="theme-toggle" class="theme-toggle">☀️</button>
-                    <a href="#" class="btn btn-outline">Login</a>
-                    <a href="#" class="btn btn-outline">Register</a>
+              </div>
+
+              <div class="workflow-step sr sr-delay-2">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                  <h3 class="gradient-text">Data Ingestion</h3>
+                  <p>
+                    Upload your existing resume PDF to the chat, or answer a rapid
+                    sequence of prompts if you are building your profile from scratch.
+                  </p>
                 </div>
-            </nav>
+              </div>
 
-            <main style="justify-content: flex-start; padding: 60px 20px 40px 20px;">
-                <div style="margin-bottom: 50px; width: 100%;">
-
-                    <h1 style="text-align: center; font-size: 2.5rem; margin-bottom: 10px;">The Intelligence <span
-                            class="gradient-text">Flow</span></h1>
-                    <p style="text-align: center; color: var(--text-muted); max-width: 600px; margin: 0 auto;">A
-                        seamless pipeline from raw data to career opportunities.</p><br><br>
-
-                    <div class="timeline-container"
-                        style="display: flex; flex-wrap: nowrap; gap: 20px; overflow-x: auto; padding-bottom: 20px; width: 100%; margin-top: 60px;">
-
-                        <div class="glass-card workflow-step"
-                            style="display: flex; flex-direction: column; gap: 15px; align-items: flex-start; min-width: 280px; flex: 1;">
-                            <div class="step-number"
-                                style="width: 50px; height: 50px; border-radius: 12px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; flex-shrink: 0;">
-                                1</div>
-                            <div class="step-content">
-                                <h3 class="gradient-text" style="font-size: 1.2rem; margin-bottom: 8px;">Initialize Bot
-                                </h3>
-                                <p style="color: var(--text-muted); font-size: 0.95rem;">Launch the Skillora
-                                    intelligence engine directly inside your preferred messaging app—currently
-                                    supporting both WhatsApp and Telegram.</p>
-                            </div>
-                        </div>
-
-                        <div class="glass-card workflow-step"
-                            style="display: flex; flex-direction: column; gap: 15px; align-items: flex-start; min-width: 280px; flex: 1;">
-                            <div class="step-number"
-                                style="width: 50px; height: 50px; border-radius: 12px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; flex-shrink: 0;">
-                                2</div>
-                            <div class="step-content">
-                                <h3 class="gradient-text" style="font-size: 1.2rem; margin-bottom: 8px;">Data Ingestion
-                                </h3>
-                                <p style="color: var(--text-muted); font-size: 0.95rem;">Upload your existing resume PDF
-                                    to the chat, or answer a rapid sequence of prompts if you are building your profile
-                                    from scratch.</p>
-                            </div>
-                        </div>
-
-                        <div class="glass-card workflow-step"
-                            style="display: flex; flex-direction: column; gap: 15px; align-items: flex-start; min-width: 280px; flex: 1;">
-                            <div class="step-number"
-                                style="width: 50px; height: 50px; border-radius: 12px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; flex-shrink: 0;">
-                                3</div>
-                            <div class="step-content">
-                                <h3 class="gradient-text" style="font-size: 1.2rem; margin-bottom: 8px;">Skill
-                                    Extraction</h3>
-                                <p style="color: var(--text-muted); font-size: 0.95rem;">The AI core instantly shreds
-                                    the document syntax, mapping your experience against a massive, real-time technical
-                                    taxonomy.</p>
-                            </div>
-                        </div>
-
-                        <div class="glass-card workflow-step"
-                            style="display: flex; flex-direction: column; gap: 15px; align-items: flex-start; min-width: 280px; flex: 1;">
-                            <div class="step-number"
-                                style="width: 50px; height: 50px; border-radius: 12px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; flex-shrink: 0;">
-                                4</div>
-                            <div class="step-content">
-                                <h3 class="gradient-text" style="font-size: 1.2rem; margin-bottom: 8px;">Job Matching
-                                </h3>
-                                <p style="color: var(--text-muted); font-size: 0.95rem;">Extracted competencies are
-                                    routed to live market APIs, returning high-fidelity, remote tech roles that match
-                                    your exact stack.</p>
-                            </div>
-                        </div>
-
-                        <div class="glass-card workflow-step"
-                            style="display: flex; flex-direction: column; gap: 15px; align-items: flex-start; min-width: 280px; flex: 1;">
-                            <div class="step-number"
-                                style="width: 50px; height: 50px; border-radius: 12px; background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; flex-shrink: 0;">
-                                5</div>
-                            <div class="step-content">
-                                <h3 class="gradient-text" style="font-size: 1.2rem; margin-bottom: 8px;">ATS Generation
-                                </h3>
-                                <p style="color: var(--text-muted); font-size: 0.95rem;">The engine compiles your data
-                                    into a pristine, machine-readable PDF optimized specifically to bypass modern
-                                    Applicant Tracking Systems.</p>
-                            </div>
-                        </div>
-
-                    </div>
+              <div class="workflow-step sr sr-delay-3">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                  <h3 class="gradient-text.light">Skill Extraction</h3>
+                  <p>
+                    The AI core instantly shreds the document syntax, mapping your
+                    experience against a massive, real-time technical taxonomy.
+                  </p>
                 </div>
+              </div>
 
-                <div class="bottom-ribbon" style="margin-top: auto;">
-                    <a href="index.html">Home</a>
-                    <a href="about.html">About Us</a>
-                    <a href="contact.html">Contact</a>
-                    <a href="how-it-works.html" class="active">How it Works</a>
+              <div class="workflow-step sr sr-delay-4">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                  <h3 class="gradient-text">Job Matching</h3>
+                  <p>
+                    Extracted competencies are routed to live market APIs, returning
+                    high-fidelity remote tech roles that match your exact stack.
+                  </p>
                 </div>
-            </main>
+              </div>
 
-            <footer>&copy; 2026 Skillora AI. Engineered for the future.</footer>
+              <div class="workflow-step sr sr-delay-5">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                  <h3 class="gradient-text">ATS Generation</h3>
+                  <p>
+                    The engine compiles your data into a pristine, machine-readable PDF
+                    optimised specifically to bypass modern Applicant Tracking Systems.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
 
-        </div>
+          <div class="bottom-ribbon" style="margin-top: auto" width="70%">
+            <a href="index.html">Home</a>
+            <a href="about.html">About Us</a>
+            <a href="contact.html">Contact</a>
+            <a href="how-it-works.html" class="active">How it Works</a>
+          </div>
+        </main>
+
+        <footer class="page-footer">
+          &copy; 2026 Skillora AI. Engineered for the future.
+        </footer>
+      </div>
     </div>
 
     <script src="script.js"></script>
-</body>
-
+  </body>
 </html>

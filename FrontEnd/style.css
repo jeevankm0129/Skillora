@@ -1,652 +1,1626 @@
 /* =========================================
-   1. THEME VARIABLES (Dark & Light Mode)
+   GOOGLE FONTS + RESET
+   ========================================= */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* =========================================
+   THEME VARIABLES
    ========================================= */
 :root {
-    --bg-1: #0b0320;
-    --bg-2: #16073a;
-    --bg-3: #1e0d4f;
-    --text-main: #ffffff;
-    --text-muted: #a1a1aa;
-
-    --glass-bg: transparent;
-    --glass-border: rgba(255, 255, 255, 0.15);
-    --glass-shadow: rgba(120, 80, 255, 0.25);
-    --card-bg: rgba(255, 255, 255, 0.03);
-
-    --accent-1: #7c5cff;
-    --accent-2: #a78bfa;
+  --bg-start: #060118;
+  --bg-end: #1a0745;
+  --text-main: #f0eeff;
+  --text-muted: #9d8ec5;
+  --glass-bg: rgba(255, 255, 255, 0.025);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: rgba(100, 60, 255, 0.15);
+  --card-bg: rgba(255, 255, 255, 0.05);
+  --card-border: rgba(255, 255, 255, 0.09);
+  --accent-1: #7c5cff;
+  --accent-2: #a78bfa;
+  --accent-3: #e2ceff;
+  --accent-4: #ffffff;
+  --orb-core: #3b1f8c;
+  --orb-glow: rgba(124, 92, 255, 0.35);
+  --orb-x: calc(100vw - 160px);
+  --orb-y: calc(100vh - 160px);
 }
 
 [data-theme="light"] {
-    --bg-1: #e6dcfc;
-    --bg-2: #f3ecff;
-    --bg-3: #e4d8fb;
-
-    --text-main: #1d1d1f;
-    --text-muted: #6b6b7b;
-
-    --glass-bg: transparent;
-    --glass-border: rgba(255, 255, 255, 0.5);
-    --glass-shadow: rgba(120, 80, 255, 0.08);
-    --card-bg: rgba(255, 255, 255, 0.15);
-
-    --accent-1: #5b3ce4;
-    --accent-2: #8b6bed;
+  --bg-start: #e8e0ff;
+  --bg-end: #f5f0ff;
+  --text-main: #1a1230;
+  --text-muted: #6b5fa5;
+  --glass-bg: rgba(255, 255, 255, 0.3);
+  --glass-border: rgba(255, 255, 255, 0.55);
+  --glass-shadow: rgba(100, 60, 255, 0.06);
+  --card-bg: rgba(255, 255, 255, 0.4);
+  --card-border: rgba(160, 140, 255, 0.28);
+  --accent-1: #6b46e8;
+  --accent-2: #9b7bf5;
+  --orb-core: #fbbf24;
+  --orb-glow: rgba(251, 191, 36, 0.4);
+  --orb-x: 60px;
+  --orb-y: 60px;
 }
 
 /* =========================================
-   2. RESET & TYPOGRAPHY
+   BASE
    ========================================= */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: var(--text-main);
-    height: 100vh;
-    width: 100vw;
-    overflow: hidden;
-    transition: color 0.5s ease;
-    background-color: #000;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  color: var(--text-main);
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+  transition:
+    background 0.8s ease,
+    color 0.5s ease;
 }
 
 a {
-    text-decoration: none;
-    color: inherit;
+  text-decoration: none;
+  color: inherit;
 }
 
 /* =========================================
-   3. LAYERED BACKGROUND SYSTEM
+   BACKGROUND LAYERS
    ========================================= */
 .layer-1-bg {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
-    z-index: 1;
-    transition: background 0.5s ease;
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
+  z-index: 1;
+  transition: background 0.8s ease;
 }
 
 .layer-2-stars {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-image: radial-gradient(var(--text-muted) 1px, transparent 1px);
-    background-size: 80px 80px;
-    opacity: 0.1;
-    z-index: 2;
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.6) 1px, transparent 1px);
+  background-size: 90px 90px;
+  opacity: 0.04;
+  z-index: 2;
 }
 
 #morphic-canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 3;
-    pointer-events: none;
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 20; /* Above glass container so particles are always visible */
+  pointer-events: none;
+  filter: blur(0.6px); /* final feathering pass on all orbs */
 }
 
 /* =========================================
-   4. GLASSMORPHISM LAYOUT
+   CELESTIAL ORB
+   ========================================= */
+#celestial-orb {
+  position: fixed;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 40% 35%,
+    white 0%,
+    var(--orb-core) 55%,
+    transparent 80%
+  );
+  box-shadow:
+    0 0 40px 20px var(--orb-glow),
+    0 0 80px 40px var(--orb-glow),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+  left: var(--orb-x);
+  top: var(--orb-y);
+  z-index: 2;
+  pointer-events: none;
+  transition:
+    left 1.2s cubic-bezier(0.4, 0, 0.2, 1),
+    top 1.2s cubic-bezier(0.4, 0, 0.2, 1),
+    background 1.2s ease,
+    box-shadow 1.2s ease;
+  will-change: left, top;
+}
+
+/* =========================================
+   LAYOUT WRAPPER
    ========================================= */
 .app-wrapper {
-    position: relative;
-    z-index: 10;
-    height: 100vh;
-    width: 100vw;
-    padding: 25px;
-    display: flex;
-    perspective: 1500px;
-    /* Creates the 3D camera depth */
+  position: relative;
+  z-index: 10;
+  height: 100vh;
+  width: 100vw;
+  padding: 20px;
+  display: flex;
+  perspective: 2000px;
 }
 
 .glass-container {
-    width: 100%;
-    height: 100%;
-    background: var(--glass-bg);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 3px solid var(--glass-border);
-    border-radius: 20px;
-    box-shadow: 0 20px 60px var(--glass-shadow);
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    overflow-x: hidden;
-
-    /* REMOVED 'transform' from transition to stop it from fighting JavaScript */
-    transition: background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
-
-    /* Hardware Acceleration Flags */
-    transform-style: preserve-3d;
-    will-change: transform;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    transform: translateZ(0);
-    /* Forces the GPU to handle this layer */
-}
-
-.glass-container::-webkit-scrollbar {
-    width: 6px;
-}
-
-.glass-container::-webkit-scrollbar-thumb {
-    background: var(--accent-2);
-    border-radius: 10px;
-}
-
-.glass-container::-webkit-scrollbar-track {
-    background: transparent;
+  width: 100%;
+  height: 100%;
+  background: var(--glass-bg);
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  box-shadow:
+    0 20px 60px var(--glass-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* no scroll — everything must fit viewport */
+  transition:
+    background 0.6s ease,
+    border-color 0.6s ease,
+    box-shadow 0.6s ease;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 /* =========================================
-   5. NAVIGATION
+   NAVIGATION
    ========================================= */
 nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 30px;
-    border-bottom: 1px solid var(--glass-border);
-    flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 28px;
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+  transition: border-color 0.5s ease;
 }
 
-/* New Brand & Tagline Layout */
 .brand-group {
-    display: flex;
-    align-items: center;
-    gap: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .brand-text {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.1;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
 }
 
 .brand-title {
-    font-size: 3rem;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    color: var(--text-main);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  color: var(--text-main);
+  transition: color 0.5s ease;
 }
 
 .brand-tagline {
-    font-size: 1.25rem;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  transition: color 0.5s ease;
 }
 
 .nav-actions {
-    display: flex;
-    gap: 16px;
-    align-items: center;
+  display: flex;
+  gap: 12px;
+  align-items: center;
 }
 
 .theme-toggle {
-    background: none;
-    border: none;
-    color: var(--text-main);
-    cursor: pointer;
-    font-size: 1.2rem;
-    transition: transform 0.3s;
-    margin-right: 10px;
+  background: var(--card-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-main);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
 }
 
 .theme-toggle:hover {
-    transform: scale(1.1);
+  transform: scale(1.1) rotate(15deg);
+  border-color: var(--accent-1);
 }
 
 /* =========================================
-   6. UI COMPONENTS
+   BUTTONS
    ========================================= */
 .btn {
-    padding: 12px 28px;
-    border-radius: 100px;
-    font-weight: 600;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-    border: 1px solid var(--glass-border);
-    text-align: center;
+  padding: 10px 24px;
+  border-radius: 100px;
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  border: 1px solid var(--glass-border);
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
-    color: #fff;
-    border-color: transparent;
-    box-shadow: 0 8px 20px var(--glass-shadow);
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 16px rgba(124, 92, 255, 0.35);
 }
 
 .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 25px var(--glass-shadow);
-    filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(124, 92, 255, 0.45);
+  filter: brightness(1.08);
 }
 
-/* Force identical sizes for both Login and Register */
 .btn-outline {
-    background: transparent;
-    color: var(--text-main);
-    min-width: 125px;
+  background: transparent;
+  color: var(--text-main);
 }
 
 .btn-outline:hover {
-    background: var(--card-bg);
-    border-color: var(--accent-1);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px var(--glass-shadow);
+  background: var(--card-bg);
+  border-color: var(--accent-1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--glass-shadow);
 }
 
+/* =========================================
+   GRADIENT TEXT
+   ========================================= */
 .gradient-text {
-    background: linear-gradient(to right, var(--accent-1), var(--accent-2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
+/* =========================================
+   GRADIENT TEXT - LIGHT THEME
+   ========================================= */
+.gradient-text.light {
+  background: linear-gradient(135deg, var(--accent-3), var(--accent-4));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+
+/* =========================================
+   GLASS CARD
+   ========================================= */
 .glass-card {
-    background: var(--card-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: 20px;
-    padding: 30px;
-    transition: all 0.4s ease;
-    position: relative;
-    overflow: hidden;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 28px;
+  transition: all 0.35s ease;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.glass-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 60%);
+  pointer-events: none;
 }
 
 .glass-card:hover {
-    transform: translateY(-5px);
-    border-color: var(--accent-1);
-    box-shadow: 0 10px 30px var(--glass-shadow);
+  transform: translateY(-5px);
+  border-color: var(--accent-1);
+  box-shadow: 0 12px 32px var(--glass-shadow);
 }
 
 /* =========================================
-   7. PAGE LAYOUTS
+   MAIN / HERO
+   ========================================= */
+/* =========================================
+   PAGE LAYOUTS
    ========================================= */
 main {
-    flex: 1;
-    padding: clamp(20px, 5vw, 40px);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+  flex: 1;
+  padding: 16px clamp(16px, 2.5vw, 32px) 10px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* required for flex children to shrink */
+}
+
+/* 2-column split */
+.content-row {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: clamp(24px, 4vw, 56px);
+  min-height: 0;
+  /* overflow:visible — lets card glow/bloom bleed freely without clipping */
+  overflow: visible;
+}
+
+.left-panel {
+  width: 42%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-right: 8px;
+}
+
+.right-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  /* visible so card glow/bloom is never clipped at the panel boundary */
+  overflow: visible;
+}
+
+/* Bottom row — ribbon pushed right */
+.bottom-area {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 0 4px;
+  flex-shrink: 0;
+}
+
+/* Hero text — left aligned */
+.hero-text {
+  transition:
+    transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.6s ease;
 }
 
 .hero {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    max-width: 800px;
-    margin: 0 auto 50px auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  max-width: none;
+  margin: 0;
 }
 
 .hero h1 {
-    font-size: clamp(3rem, 6vw, 5.5rem);
-    font-weight: 800;
-    letter-spacing: -1.5px;
-    line-height: 1.1;
-    margin-bottom: 20px;
+  font-size: clamp(1.9rem, 4vw, 3.8rem);
+  font-weight: 800;
+  letter-spacing: -1.2px;
+  line-height: 1.1;
+  margin-bottom: 16px;
+  color: var(--text-main);
+  transition: color 0.5s ease;
 }
 
 .hero p {
-    font-size: clamp(1.1rem, 2vw, 1.25rem);
-    color: var(--text-muted);
-    margin-bottom: 40px;
+  font-size: clamp(0.85rem, 1.4vw, 1rem);
+  color: var(--text-muted);
+  margin-bottom: 0;
+  line-height: 1.7;
+  max-width: 400px;
 }
 
 .hero-ctas {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-}
-
-/* About Page Grids */
-.about-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 40px;
-    margin-bottom: 60px;
-}
-
-.team-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 30px;
-    margin-top: 20px;
-}
-
-.team-member {
-    text-align: center;
-}
-
-.team-member .avatar {
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--bg-3), var(--accent-1));
-    margin: 0 auto 15px;
-    border: 2px solid var(--glass-border);
-}
-
-.team-member h3 {
-    font-size: 1.3rem;
-    margin-bottom: 5px;
-}
-
-.team-member .role {
-    color: var(--accent-1);
-    font-size: 0.9rem;
-    margin-bottom: 10px;
-    font-weight: 600;
-}
-
-.mentor-card {
-    display: flex;
-    align-items: center;
-    gap: 30px;
-    margin-top: 20px;
-}
-
-.mentor-card .avatar {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
-    border: 2px solid var(--glass-border);
-    flex-shrink: 0;
-}
-
-/* Contact Link Cards */
-.contact-links {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    width: 100%;
-    max-width: 350px;
-    margin-top: 40px;
-}
-
-.contact-links a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
-    padding: 18px;
-    background: var(--card-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: 12px;
-    transition: all 0.3s ease;
-    font-weight: 600;
-    font-size: 1.05rem;
-}
-
-.contact-links a:hover {
-    border-color: var(--accent-1);
-    transform: scale(1.02);
-    box-shadow: 0 10px 30px var(--glass-shadow);
-}
-
-.contact-links svg {
-    color: var(--accent-1);
-}
-
-/* Workflow Grid */
-.workflow-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
-    margin-top: 40px;
-    max-width: 1000px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.workflow-step {
-    display: flex;
-    gap: 20px;
-    align-items: flex-start;
-}
-
-.step-number {
-    width: 50px;
-    height: 50px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: 1.2rem;
-    flex-shrink: 0;
-    box-shadow: 0 4px 15px var(--glass-shadow);
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
 }
 
 /* =========================================
-   8. THE APPLE LIQUID GLASS DROP RIBBON
+   JOB CARD MORPH BUTTON
    ========================================= */
-.bottom-ribbon {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 40px;
-    padding: 16px 48px;
-    margin: 0 auto;
-    border-radius: 100px;
-
-    /* Liquid Physics: High blur + 200% color saturation */
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(40px) saturate(200%);
-    -webkit-backdrop-filter: blur(40px) saturate(200%);
-
-    /* The 3D Liquid Edge: Outer drop shadow + Inner white light reflection */
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow:
-        0 20px 40px rgba(0, 0, 0, 0.15),
-        inset 0 1px 1px rgba(255, 255, 255, 0.3);
-
-    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+.hero-text.shift-up {
+  opacity: 0.35;
 }
 
-/* Light Mode specific liquid settings (like iOS) */
+.btn-resume {
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#btn-resume.shift-down {
+  transform: translateY(30px) scale(0.9);
+  opacity: 0.4;
+  filter: blur(1px);
+  pointer-events: none;
+}
+
+.job-card {
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  color: #fff;
+  border-radius: 100px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 8px 20px rgba(124, 92, 255, 0.35);
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 240px;
+  height: 52px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid transparent;
+}
+
+.job-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(124, 92, 255, 0.45);
+}
+
+.job-card.expanded {
+  width: 100%;
+  max-width: 760px;
+  height: 240px;
+  border-radius: 24px;
+  background: var(--card-bg);
+  border: 1px solid var(--accent-1);
+  cursor: default;
+  box-shadow: 0 20px 50px var(--glass-shadow);
+  transform: translateY(0);
+}
+
+.job-card.hidden {
+  display: none !important;
+}
+
+.job-card-title {
+  position: absolute;
+  transition: opacity 0.3s ease;
+  white-space: nowrap;
+}
+
+.job-card.expanded .job-card-title {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.job-upload-ui {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 24px;
+  text-align: center;
+}
+
+.job-card.expanded .job-upload-ui {
+  opacity: 1;
+  pointer-events: auto;
+  transition-delay: 0.3s;
+}
+
+.drop-zone:hover {
+  border-color: var(--accent-1) !important;
+  background: rgba(124, 92, 255, 0.08) !important;
+}
+
+/* =========================================
+   JOB RESULTS — ANTI-GRAVITY CAROUSEL
+   ========================================= */
+
+/* Wrapper that replaces hero section on results */
+#job-results-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  /* top padding creates a clear buffer zone below the fixed header */
+  padding-top: 12px;
+  animation: wrapperFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes wrapperFadeIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+.job-results-title {
+  font-size: 0.95rem;
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* ── CAROUSEL SCENE ──────────────────────────────── */
+.carousel-scene {
+  position: relative;
+  width: 100%;
+  /* taller scene gives scaled-up active card (1.22×) vertical room
+     so its top edge never bleeds into the header zone              */
+  height: 260px;
+  perspective: 1100px;
+  perspective-origin: 50% 55%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow: visible;
+}
+
+.carousel-scene:active { cursor: grabbing; }
+
+/* The rotating stage — all cards live here */
+.carousel-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+/* ── INDIVIDUAL CARD ─────────────────────────────── */
+.ag-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 280px;
+  min-height: 168px;
+  border-radius: 20px;
+  padding: 18px 20px 16px;
+  background: linear-gradient(
+    140deg,
+    rgba(20, 10, 50, 0.72),
+    rgba(40, 20, 80, 0.55)
+  );
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid rgba(124, 92, 255, 0.22);
+  box-shadow:
+    0 4px 32px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255,255,255,0.07);
+  /* will-change set via JS to avoid layout cost */
+  pointer-events: none;         /* JS toggles this per card */
+  transform-origin: 50% 50%;
+  transform-style: preserve-3d;
+  /* NO CSS transition — JS animates via requestAnimationFrame */
+}
+
+/* Gradient shimmer overlay on each card */
+.ag-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  background: linear-gradient(
+    130deg,
+    rgba(255,255,255,0.06) 0%,
+    transparent 55%
+  );
+  pointer-events: none;
+}
+
+/* Active (center) card — bigger, glowing, dominant */
+.ag-card.ag-active {
+  width: 340px;               /* wider than resting 280 px */
+  min-height: 200px;
+  padding: 24px 26px 20px;   /* more breathing room */
+  border-color: rgba(124, 92, 255, 0.65);
+  box-shadow:
+    0 0 0 1px rgba(124, 92, 255, 0.4),
+    0 0 40px  8px rgba(100, 60, 255, 0.28),
+    0 0 80px 20px rgba(80,  40, 220, 0.14),
+    0 12px 48px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255,255,255,0.12);
+  pointer-events: auto;
+}
+
+/* Neon edge line on active card */
+.ag-card.ag-active::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 24px;
+  background: linear-gradient(
+    135deg,
+    rgba(124, 92, 255, 0.55),
+    rgba(56, 189, 248, 0.35),
+    rgba(167,139,250, 0.45)
+  );
+  z-index: -1;
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+/* ── CARD INTERNALS ──────────────────────────────── */
+.ag-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.ag-card-info { flex: 1; min-width: 0; }
+
+.ag-card-title {
+  font-size: 0.93rem;
+  font-weight: 700;
+  color: #f0eeff;
+  line-height: 1.25;
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ag-card-company {
+  font-size: 0.72rem;
+  color: #9d8ec5;
+  font-weight: 600;
+}
+
+.ag-match-badge {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(124,92,255,0.3), rgba(56,189,248,0.2));
+  color: #c4b5fd;
+  padding: 4px 9px;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 0.7rem;
+  border: 1px solid rgba(124, 92, 255, 0.45);
+  white-space: nowrap;
+}
+
+.ag-card.ag-active .ag-match-badge {
+  font-size: 0.82rem;
+  padding: 6px 13px;
+  color: #e0d6ff;
+  box-shadow: 0 0 16px rgba(124,92,255,0.5);
+  border-color: rgba(124,92,255,0.7);
+}
+
+.ag-card-reason {
+  font-size: 0.7rem;
+  color: rgba(200,190,230,0.65);
+  font-style: italic;
+  line-height: 1.45;
+  margin: 6px 0 8px;
+  padding-left: 9px;
+  border-left: 2px solid rgba(167,139,250,0.35);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ag-card.ag-active .ag-card-title  { font-size: 1.15rem; white-space: normal; }
+.ag-card.ag-active .ag-card-company { font-size: 0.82rem; }
+.ag-card.ag-active .ag-card-reason {
+  font-size: 0.82rem;
+  -webkit-line-clamp: 3;      /* show one extra line on active card */
+  color: rgba(229,222,255,0.85);
+  border-left-color: #a78bfa;
+  border-left-width: 3px;
+}
+
+.ag-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid rgba(167,139,250,0.14);
+}
+
+.ag-card-salary {
+  font-size: 0.7rem;
+  color: #9d8ec5;
+  font-weight: 600;
+}
+
+/* Active card: bigger salary label */
+.ag-card.ag-active .ag-card-salary {
+  font-size: 0.88rem;
+  color: #c4b5fd;
+}
+
+.ag-card-apply {
+  padding: 5px 14px !important;
+  font-size: 0.7rem !important;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+/* Active card: full-size Apply button */
+.ag-card.ag-active .ag-card-apply {
+  padding: 9px 22px !important;
+  font-size: 0.88rem !important;
+  opacity: 1;
+  pointer-events: auto;
+  box-shadow: 0 4px 18px rgba(124,92,255,0.4);
+}
+
+/* ── IDLE FLOAT ANIMATION (applied via JS class) ─── */
+@keyframes agFloat {
+  0%,100% { transform: var(--ag-base-transform) translateY(0px);   }
+  50%      { transform: var(--ag-base-transform) translateY(-5px);  }
+}
+
+/* ── CAROUSEL CONTROLS ───────────────────────────── */
+.ag-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  position: relative;
+  z-index: 100;
+  /* extra clearance so controls never overlap the bottom of the carousel */
+  margin-top: 20px;
+}
+
+.ag-nav-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(124,92,255,0.10);
+  border: 1px solid rgba(124,92,255,0.30);
+  color: #c4b5fd;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.22s cubic-bezier(0.2,0.8,0.2,1);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.ag-nav-btn:hover {
+  background: rgba(124,92,255,0.22);
+  border-color: rgba(124,92,255,0.6);
+  box-shadow: 0 0 16px rgba(124,92,255,0.35);
+  transform: scale(1.12);
+}
+
+.ag-nav-btn:active { transform: scale(0.96); }
+
+/* Dots indicator */
+.ag-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.ag-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(124,92,255,0.28);
+  border: 1px solid rgba(124,92,255,0.35);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.ag-dot.ag-dot-active {
+  width: 18px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #7c5cff, #38bdf8);
+  border-color: transparent;
+  box-shadow: 0 0 8px rgba(124,92,255,0.5);
+}
+
+/* Close button */
+.job-results-actions {
+  position: relative;
+  z-index: 100;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+/* Card internals (legacy keep for email state) */
+.job-stack-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  gap: 12px;
+}
+.job-stack-card-info { flex: 1; min-width: 0; }
+.job-stack-card-title {
+  font-size: 0.95rem; font-weight: 700;
+  color: var(--text-main); margin-bottom: 2px;
+  line-height: 1.25; transition: color 0.5s;
+}
+.job-stack-card-company { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
+.job-stack-match-badge {
+  flex-shrink: 0;
+  background: linear-gradient(135deg,rgba(124,92,255,0.35),rgba(167,139,250,0.25));
+  color: #c4b5fd; padding: 5px 10px; border-radius: 8px;
+  font-weight: 800; font-size: 0.72rem;
+  border: 1px solid rgba(124,92,255,0.5);
+  box-shadow: 0 0 14px rgba(124,92,255,0.25);
+}
+.job-stack-card-reason {
+  font-size: 0.72rem; color: rgba(209,213,219,0.75);
+  font-style: italic; line-height: 1.4; margin: 8px 0;
+  padding-left: 10px; border-left: 2px solid rgba(167,139,250,0.45);
+  display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+.job-stack-card-footer {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-top: 8px;
+  padding-top: 8px; border-top: 1px solid rgba(167,139,250,0.18);
+}
+.job-stack-salary { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
+.job-stack-apply  { padding: 5px 14px !important; font-size: 0.72rem !important; }
+
+/* old vertical card — keep for email state */
+.job-result-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.job-result-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.5s ease;
+}
+
+.job-result-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  transition: color 0.5s ease;
+}
+
+.job-result-reason {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.job-result-actions {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.job-result-salary {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.job-result-apply {
+  padding: 5px 14px !important;
+  font-size: 0.72rem !important;
+}
+
+.job-results-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 14px;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+/* =========================================
+   BOTTOM RIBBON NAV
+   ========================================= */
+.bottom-ribbon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 28px;
+  padding: 12px 36px;
+  margin: 0; /* right-alignment handled by .bottom-area */
+  border-radius: 90px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.12),
+    inset 0 1px 1px rgba(255, 255, 255, 0.25);
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
 [data-theme="light"] .bottom-ribbon {
-    background: rgba(255, 255, 255, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    box-shadow:
-        0 20px 40px rgba(120, 80, 255, 0.05),
-        inset 0 1px 2px rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 16px 40px rgba(100, 60, 255, 0.06),
+    inset 0 1px 2px rgba(255, 255, 255, 0.9);
 }
 
 .bottom-ribbon:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow:
-        0 25px 50px rgba(0, 0, 0, 0.2),
-        inset 0 1px 1px rgba(255, 255, 255, 0.5);
-    border-color: rgba(124, 92, 255, 0.5);
+  transform: translateY(-3px) scale(1.01);
+  box-shadow:
+    0 22px 48px rgba(0, 0, 0, 0.18),
+    inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  border-color: rgba(124, 92, 255, 0.4);
 }
 
 .bottom-ribbon a {
-    font-weight: 600;
-    font-size: 1.125rem;
-    color: var(--text-muted);
-    transition: color 0.3s ease;
-    position: relative;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  transition: color 0.3s ease;
+  position: relative;
 }
 
 .bottom-ribbon a:hover,
 .bottom-ribbon a.active {
-    color: var(--text-main);
+  color: var(--text-main);
 }
 
 .bottom-ribbon a::after {
-    content: '';
-    position: absolute;
-    width: 0;
-    height: 2px;
-    bottom: -4px;
-    left: 0;
-    background: var(--accent-1);
-    transition: width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -4px;
+  left: 0;
+  background: var(--accent-1);
+  border-radius: 2px;
+  transition: width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .bottom-ribbon a:hover::after,
 .bottom-ribbon a.active::after {
-    width: 100%;
+  width: 100%;
 }
 
 /* =========================================
-   9. FOOTER & MEDIA QUERIES
+   FOOTER
    ========================================= */
 footer {
-    width: 100%;
-    padding: 30px 20px;
-    text-align: center;
-    border-top: 1px solid var(--glass-border);
-    color: var(--text-muted);
-    font-size: 1rem;
-    flex-shrink: 0;
-    margin-top: auto;
+  display: none; /* hidden on index to preserve no-scroll; visible on other pages */
+}
+
+.page-footer {
+  width: 100%;
+  padding: 14px 20px;
+  text-align: center;
+  border-top: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  flex-shrink: 0;
+  transition:
+    color 0.5s ease,
+    border-color 0.5s ease;
+}
+
+/* Other pages restore scrolling */
+.glass-container.page-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.glass-container.page-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+.glass-container.page-scroll::-webkit-scrollbar-thumb {
+  background: var(--accent-2);
+  border-radius: 10px;
+}
+.glass-container.page-scroll::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 /* =========================================
-   10. JOB RECOMMENDATION MODAL CHOREOGRAPHY
+   SECONDARY PAGES — PAGE HERO HEADER
+   ========================================= */
+.page-hero {
+  text-align: center;
+  padding: 48px 0 32px;
+  position: relative;
+}
+
+.page-hero h1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1.15;
+  margin-bottom: 12px;
+}
+
+.page-hero p {
+  color: var(--text-muted);
+  font-size: clamp(0.9rem, 1.4vw, 1.05rem);
+  line-height: 1.65;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+/* Soft ambient glow behind page titles */
+.page-hero::before {
+  content: "";
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  translate: -50% -50%;
+  width: 420px;
+  height: 120px;
+  background: radial-gradient(ellipse, rgba(124,92,255,0.18) 0%, transparent 70%);
+  pointer-events: none;
+  filter: blur(28px);
+  z-index: 0;
+}
+
+/* =========================================
+   ABOUT PAGE
+   ========================================= */
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 28px;
+  margin-bottom: 48px;
+}
+
+/* Floating about/mission cards */
+.about-grid .glass-card {
+  position: relative;
+  background: linear-gradient(140deg, rgba(20,10,50,0.65), rgba(40,20,80,0.48));
+  border: 1px solid rgba(124,92,255,0.2);
+  border-radius: 22px;
+  padding: 32px;
+  transition: transform 0.5s cubic-bezier(0.16,1,0.3,1),
+              box-shadow 0.5s ease,
+              border-color 0.4s ease;
+  overflow: visible;
+}
+
+.about-grid .glass-card:hover {
+  transform: translateY(-6px) scale(1.01);
+  border-color: rgba(124,92,255,0.45);
+  box-shadow:
+    0 0 0 1px rgba(124,92,255,0.25),
+    0 0 40px 6px rgba(100,60,255,0.18),
+    0 16px 48px rgba(0,0,0,0.35);
+}
+
+/* Shimmer overlay */
+.about-grid .glass-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 22px;
+  background: linear-gradient(130deg, rgba(255,255,255,0.055) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+/* Section headings on about */
+.section-heading {
+  font-size: 1.6rem;
+  text-align: center;
+  margin-bottom: 10px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  position: relative;
+}
+
+.section-heading::after {
+  content: "";
+  display: block;
+  margin: 10px auto 0;
+  width: 48px;
+  height: 3px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+  box-shadow: 0 0 12px rgba(124,92,255,0.55);
+}
+
+/* ── TEAM GRID ───────────────────────────────────── */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  justify-items: center;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.team-member {
+  text-align: center;
+  width: 100%;
+  max-width: 360px;
+}
+
+/* Floating team card */
+.team-member.glass-card {
+  background: linear-gradient(140deg, rgba(20,10,50,0.6), rgba(40,20,80,0.45));
+  border: 1px solid rgba(124,92,255,0.18);
+  border-radius: 20px;
+  padding: 28px 24px;
+  transition: transform 0.5s cubic-bezier(0.16,1,0.3,1),
+              box-shadow 0.45s ease,
+              border-color 0.4s ease;
+  overflow: visible;
+}
+
+.team-member.glass-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: rgba(124,92,255,0.4);
+  box-shadow:
+    0 0 35px 6px rgba(100,60,255,0.2),
+    0 16px 40px rgba(0,0,0,0.3);
+}
+
+/* Avatar with orbit glow ring */
+.team-member .avatar {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  border: 2px solid rgba(124,92,255,0.35);
+  margin: 0 auto 16px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: var(--bg-end);
+  box-shadow: 0 0 0 4px rgba(124,92,255,0.08),
+              0 0 20px 4px rgba(124,92,255,0.14);
+  transition: transform 0.4s cubic-bezier(0.16,1,0.3,1),
+              box-shadow 0.4s ease,
+              border-color 0.4s ease;
+}
+
+.team-member:hover .avatar {
+  transform: scale(1.06);
+  border-color: var(--accent-1);
+  box-shadow: 0 0 0 6px rgba(124,92,255,0.12),
+              0 0 30px 8px rgba(124,92,255,0.22);
+}
+
+.team-member h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.team-member .role {
+  color: var(--accent-1);
+  font-size: 0.82rem;
+  margin-bottom: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* ── MENTOR CARD ─────────────────────────────────── */
+.mentor-card {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin-top: 20px;
+  background: linear-gradient(140deg, rgba(20,10,50,0.62), rgba(40,20,80,0.48));
+  border: 1px solid rgba(124,92,255,0.22);
+  border-radius: 22px;
+  padding: 28px 32px;
+  transition: transform 0.5s cubic-bezier(0.16,1,0.3,1),
+              box-shadow 0.45s ease;
+}
+
+.mentor-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0 30px 6px rgba(100,60,255,0.18),
+              0 12px 36px rgba(0,0,0,0.28);
+  border-color: rgba(124,92,255,0.38);
+}
+
+.mentor-card .avatar {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  border: 2px solid rgba(124,92,255,0.4);
+  flex-shrink: 0;
+  box-shadow: 0 0 22px rgba(124,92,255,0.35);
+}
+
+/* About main override */
+.main-about {
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+  justify-content: flex-start;
+  padding-top: 0;
+}
+
+/* =========================================
+   CONTACT PAGE
+   ========================================= */
+.contact-links {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 400px;
+  margin-top: 36px;
+}
+
+/* Glassmorphic floating contact rows */
+.contact-links a {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+  padding: 18px 22px;
+  background: linear-gradient(140deg, rgba(20,10,50,0.65), rgba(40,20,80,0.5));
+  border: 1px solid rgba(124,92,255,0.18);
+  border-radius: 16px;
+  transition:
+    transform 0.45s cubic-bezier(0.16,1,0.3,1),
+    box-shadow 0.4s ease,
+    border-color 0.35s ease;
+  font-weight: 600;
+  font-size: 0.97rem;
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Shimmer overlay */
+.contact-links a::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background: linear-gradient(130deg, rgba(255,255,255,0.05) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.contact-links a:hover {
+  border-color: rgba(124,92,255,0.5);
+  transform: translateY(-5px) scale(1.01);
+  box-shadow:
+    0 0 0 1px rgba(124,92,255,0.25),
+    0 0 32px 6px rgba(100,60,255,0.18),
+    0 12px 36px rgba(0,0,0,0.3);
+}
+
+/* Icon glow */
+.contact-links svg {
+  color: var(--accent-1);
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 6px rgba(124,92,255,0.55));
+  transition: filter 0.3s ease, transform 0.3s ease;
+}
+
+.contact-links a:hover svg {
+  filter: drop-shadow(0 0 10px rgba(124,92,255,0.85));
+  transform: scale(1.12);
+}
+
+/* =========================================
+   HOW IT WORKS — ANTI-GRAVITY TIMELINE
+   ========================================= */
+.timeline-container {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0;                  /* gap handled by connector pseudo-elements */
+  overflow-x: auto;
+  padding: 24px 4px 20px;
+  width: 100%;
+  margin-top: 32px;
+  align-items: stretch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124,92,255,0.4) transparent;
+}
+
+.timeline-container::-webkit-scrollbar { height: 4px; }
+.timeline-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+  border-radius: 10px;
+}
+.timeline-container::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.04);
+  border-radius: 10px;
+}
+
+/* Each workflow step card */
+.workflow-step {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+  min-width: 240px;
+  flex: 1;
+  position: relative;
+  /* Floating glass card */
+  background: linear-gradient(140deg, rgba(20,10,50,0.68), rgba(40,20,80,0.5));
+  border: 1px solid rgba(124,92,255,0.18);
+  border-radius: 22px;
+  padding: 28px 24px;
+  margin: 0 10px;
+  transition:
+    transform 0.5s cubic-bezier(0.16,1,0.3,1),
+    box-shadow 0.45s ease,
+    border-color 0.35s ease;
+  overflow: visible;
+}
+
+.workflow-step::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 22px;
+  background: linear-gradient(130deg, rgba(255,255,255,0.055) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+.workflow-step:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: rgba(124,92,255,0.42);
+  box-shadow:
+    0 0 0 1px rgba(124,92,255,0.25),
+    0 0 40px 8px rgba(100,60,255,0.2),
+    0 16px 48px rgba(0,0,0,0.32);
+}
+
+/* Glowing connector line between steps */
+.workflow-step + .workflow-step::after {
+  content: "";
+  position: absolute;
+  top: 36px;
+  left: -18px;
+  width: 18px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(124,92,255,0.5), rgba(56,189,248,0.5));
+  box-shadow: 0 0 8px rgba(124,92,255,0.4);
+  pointer-events: none;
+}
+
+/* Step number — pulsing glow node */
+.step-number {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  position: relative;
+  box-shadow:
+    0 0 0 0 rgba(124,92,255,0.5),
+    0 6px 20px rgba(124,92,255,0.45);
+  animation: stepPulse 3s ease-in-out infinite;
+}
+
+/* Offset each step's pulse phase so they feel alive */
+.workflow-step:nth-child(1) .step-number { animation-delay: 0s;    }
+.workflow-step:nth-child(2) .step-number { animation-delay: 0.6s;  }
+.workflow-step:nth-child(3) .step-number { animation-delay: 1.2s;  }
+.workflow-step:nth-child(4) .step-number { animation-delay: 1.8s;  }
+.workflow-step:nth-child(5) .step-number { animation-delay: 2.4s;  }
+
+@keyframes stepPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(124,92,255,0.45), 0 6px 18px rgba(124,92,255,0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(124,92,255,0), 0 6px 28px rgba(124,92,255,0.55);
+  }
+}
+
+.step-content h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.step-content p {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.65;
+}
+
+/* =========================================
+   MEDIA QUERIES
    ========================================= */
 
-/* 1. Header Sliding Up */
-.hero-text {
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease;
-}
-
-.hero-text.shift-up {
-    transform: translateY(-40px);
-    opacity: 0.4;
-}
-
-/* 2. Resume Button Sliding Down */
-/* 2. Resume Button Sliding Down */
-.btn-resume {
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* When the Job Card expands, this class is added to the Resume button via JS */
-#btn-resume.shift-down {
-    transform: translateY(30px) scale(0.9);
-    /* Moves down and shrinks slightly */
-    opacity: 0.5;
-    /* Dims it so focus remains on the job results */
-    filter: blur(1px);
-    /* Optional: adds a slight depth-of-field effect */
-    pointer-events: none;
-    /* Optional: prevents clicks while the dashboard is open */
-}
-
-
-/* 3. The Morphing Job Button */
-.job-card {
-    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
-    color: #fff;
-    border-radius: 100px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 8px 20px var(--glass-shadow);
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-
-    /* Starting Dimensions (Looks like a normal button) */
-    width: 260px;
-    height: 58px;
-    overflow: hidden;
-    position: relative;
-    border: 1px solid transparent;
-}
-
-.job-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 25px var(--glass-shadow);
-}
-
-/* Expanded State (The Horizontal Card) */
-.job-card.expanded {
-    width: 100%;
-    max-width: 800px;
-    /* The horizontal width */
-    height: 250px;
-    /* Fits the dropzone */
-    border-radius: 30px;
-    background: var(--card-bg);
-    border: 1px solid var(--accent-1);
-    cursor: default;
-    box-shadow: 0 20px 50px var(--glass-shadow);
-    transform: translateY(0);
-}
-
-/* 4. Fading the Content In and Out */
-.job-card-title {
-    position: absolute;
-    transition: opacity 0.3s ease;
-    white-space: nowrap;
-}
-
-.job-card.expanded .job-card-title {
-    opacity: 0;
-    pointer-events: none;
-}
-
-.job-upload-ui {
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.4s ease;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    padding: 30px;
-    text-align: center;
-}
-
-.job-card.expanded .job-upload-ui {
-    opacity: 1;
-    pointer-events: auto;
-    transition-delay: 0.3s;
-    /* Waits for the box to expand before showing text */
-}
-
-.drop-zone:hover {
-    border-color: var(--accent-1) !important;
-    background: rgba(124, 92, 255, 0.1) !important;
-}
-
-/* Mobile Responsiveness */
+/* Collapse 2-col to 1-col on tablets */
 @media (max-width: 900px) {
-    .team-grid {
-        grid-template-columns: 1fr;
-    }
+  .team-grid {
+    grid-template-columns: 1fr;
+  }
+  .mentor-card {
+    flex-direction: column;
+    text-align: center;
+  }
 
-    .mentor-card {
-        flex-direction: column;
-        text-align: center;
-    }
+  .content-row {
+    flex-direction: column;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .left-panel {
+    width: 100%;
+    padding-right: 0;
+    text-align: center;
+  }
+
+  .hero {
+    align-items: center;
+    text-align: center;
+  }
+
+  .hero p {
+    max-width: 500px;
+  }
+
+  .right-panel {
+    width: 100%;
+  }
+
+  .bottom-area {
+    justify-content: center;
+  }
 }
 
 @media (max-width: 768px) {
-    .bottom-ribbon {
-        gap: 20px;
-        padding: 15px 25px;
-        flex-wrap: wrap;
-    }
+  .bottom-ribbon {
+    gap: 18px;
+    padding: 12px 22px;
+    flex-wrap: wrap;
+  }
+  .hero h1 {
+    font-size: 2rem;
+  }
+  nav {
+    padding: 14px 16px;
+  }
+  .brand-title {
+    font-size: 1.2rem;
+  }
+  #celestial-orb {
+    width: 80px;
+    height: 80px;
+  }
+  .job-card.expanded {
+    height: auto;
+    min-height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-wrapper {
+    padding: 10px;
+  }
+  .glass-container {
+    border-radius: 14px;
+  }
+  .hero h1 {
+    font-size: 1.7rem;
+  }
+  .job-card {
+    width: 200px;
+  }
+}
+
+/* Right-panel expanded job card fills panel */
+.right-panel .job-card.expanded {
+  max-width: 100%;
+  width: 100%;
+}
+
+/* =========================================
+   SCROLL-REVEAL ANIMATION SYSTEM
+   (all secondary pages)
+   ========================================= */
+
+/* Initial hidden state — JS adds .sr-visible */
+.sr {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sr.sr-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger delays for groups of sibling items */
+.sr-delay-1 { transition-delay: 0.1s; }
+.sr-delay-2 { transition-delay: 0.2s; }
+.sr-delay-3 { transition-delay: 0.3s; }
+.sr-delay-4 { transition-delay: 0.4s; }
+.sr-delay-5 { transition-delay: 0.5s; }
+
+/* =========================================
+   SECONDARY PAGES — GLOBAL SPACING FIX
+   ========================================= */
+
+/* Give secondary page mains breathing room below the nav */
+.glass-container.page-scroll > main {
+  padding-top: 8px;
+}
+
+/* Scrollbar glow tint for scroll pages */
+.glass-container.page-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--accent-1), var(--accent-2));
+}
+
+/* =========================================
+   FOOTER UPGRADE
+   ========================================= */
+.page-footer {
+  width: 100%;
+  padding: 16px 24px;
+  text-align: center;
+  border-top: 1px solid rgba(124,92,255,0.15);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+  background: linear-gradient(0deg, rgba(10,4,30,0.4) 0%, transparent 100%);
+  transition: color 0.5s ease, border-color 0.5s ease;
+}
+
+/* =========================================
+   ABOUT PAGE — RESPONSIVE
+   ========================================= */
+@media (max-width: 768px) {
+  .mentor-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  .mentor-card .avatar {
+    margin: 0 auto;
+  }
+  .timeline-container {
+    padding: 16px 8px 16px;
+  }
+  .workflow-step {
+    min-width: 200px;
+    padding: 20px 18px;
+    margin: 0 6px;
+  }
 }

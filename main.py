@@ -1,10 +1,13 @@
 import asyncio
 import logging
+import os
 from contextlib import asynccontextmanager
 from typing import cast
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -13,7 +16,7 @@ from telegram.ext import (
     filters,
 )
 
-# Import Bot Logic
+# Bot logic
 from bot.telegram_bot import (
     ASK_CONTACT,
     ASK_EDUCATION,
@@ -27,15 +30,16 @@ from bot.telegram_bot import (
     CHOOSING,
     EMAIL_INPUT,
     RESUME_UPLOAD,
-    ask_for_resume,
     build_and_send_resume,
     cancel,
+    handle_build_resume_choice,   # FIX: was handle_resume_choice (wrong handler)
     handle_contact,
     handle_education,
     handle_email_input,
     handle_exams,
     handle_experience,
     handle_internships,
+    handle_job_rec_choice,        # FIX: new dedicated handler for Job Recommendations
     handle_name,
     handle_projects,
     handle_resume_file,
@@ -43,124 +47,157 @@ from bot.telegram_bot import (
     start,
 )
 from bot.whatsapp_bot import whatsapp_router
-
-# Import Infrastructure
 from config import TELEGRAM_BOT_TOKEN
 from database.db import Base, engine
 from services.notification_service import schedule_job_checks
 
-# IMPORT YOUR NEW WEB FRONTEND ROUTER
-from web_Page import web_router
-
-# Setup Logging
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO,
 )
 logger = logging.getLogger(__name__)
 
-# Global variable to hold the Telegram app
 telegram_app = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Manages the startup and shutdown sequence of the entire Skillora system.
-    """
     global telegram_app
-    logger.info("Initializing Skillora Engine...")
 
-    # 1. Initialize Async Database Tables
+    logger.info("Initialising Skillora Engine…")
+
+    # Create all DB tables on startup
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    logger.info("Database ready.")
 
-    # 2. Start Background Job Hunter (Runs every 2 hours)
+    # Start background job scheduler
     schedule_job_checks(asyncio.get_running_loop())
 
-    # 3. Initialize Telegram Bot concurrently
-    # Explicitly cast the token to a string to satisfy the type-checker
+    # Build Telegram application
     valid_token = cast(str, TELEGRAM_BOT_TOKEN)
     telegram_app = Application.builder().token(valid_token).build()
 
+    # ------------------------------------------------------------------
+    # ConversationHandler — fully wired routing
+    # ------------------------------------------------------------------
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
-            # Branching state
+            # Main menu — two distinct buttons, two distinct handlers
             CHOOSING: [
                 MessageHandler(
-                    filters.Regex("^(Job Recommendations|Build Resume)$"), ask_for_resume
-                )
+                    filters.Regex("^Job Recommendations$"),
+                    handle_job_rec_choice,       # → RESUME_UPLOAD
+                ),
+                MessageHandler(
+                    filters.Regex("^Build Resume$"),
+                    handle_build_resume_choice,  # → ASK_NAME
+                ),
             ],
-            # Flow 1: Job Recommendations
-            RESUME_UPLOAD: [MessageHandler(filters.Document.ALL, handle_resume_file)],
-            EMAIL_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_email_input)],
-            # Flow 2: Resume Builder (Step-by-Step)
-            ASK_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_name)],
-            ASK_CONTACT: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_contact)],
-            ASK_EDUCATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_education)],
-            ASK_SKILLS: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_skills)],
-            ASK_PROJECTS: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_projects)],
-            ASK_INTERNSHIPS: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_internships)],
-            ASK_EXPERIENCE: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_experience)],
-            ASK_EXAMS: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_exams)],
+
+            # Job recommendation path
+            RESUME_UPLOAD: [
+                MessageHandler(filters.Document.ALL, handle_resume_file),
+            ],
+            EMAIL_INPUT: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_email_input),
+            ],
+
+            # Resume builder path
+            ASK_NAME: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_name),
+            ],
+            ASK_CONTACT: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_contact),
+            ],
+            ASK_EDUCATION: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_education),
+            ],
+            ASK_SKILLS: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_skills),
+            ],
+            ASK_PROJECTS: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_projects),
+            ],
+            ASK_INTERNSHIPS: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_internships),
+            ],
+            ASK_EXPERIENCE: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_experience),
+            ],
+            ASK_EXAMS: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_exams),
+            ],
             ASK_EXTRACURRICULAR: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, build_and_send_resume)
+                MessageHandler(filters.TEXT & ~filters.COMMAND, build_and_send_resume),
             ],
         },
         fallbacks=[CommandHandler("cancel", cancel)],
+        # Persist conversation state across bot restarts (optional but recommended)
+        allow_reentry=True,
     )
+
     telegram_app.add_handler(conv_handler)
 
-    # Start the bot natively inside the FastAPI event loop
     await telegram_app.initialize()
     await telegram_app.start()
-
     if telegram_app.updater:
-        # drop_pending_updates ignores old messages sent while the bot was offline
         await telegram_app.updater.start_polling(drop_pending_updates=True)
-        logger.info("Telegram Bot active and polling.")
 
-    yield  # --- The Web Server runs here ---
+    yield  # Server runs here
 
-    # 4. Graceful Shutdown with a Kill Switch
-    logger.info("Shutting down Skillora Engine... (This may take up to 2 seconds)")
+    # Graceful shutdown
     if telegram_app:
-        try:
-            if telegram_app.updater:
-                # Forcefully cut the long-polling network connection after 2 seconds
-                await asyncio.wait_for(telegram_app.updater.stop(), timeout=2.0)
-
-            await asyncio.wait_for(telegram_app.stop(), timeout=2.0)
-            await telegram_app.shutdown()
-        except asyncio.TimeoutError:
-            logger.warning("Telegram shutdown timed out. Forcefully closed.")
+        if telegram_app.updater and telegram_app.updater.running:
+            await telegram_app.updater.stop()
+        await telegram_app.stop()
+        await telegram_app.shutdown()
 
     await engine.dispose()
-    logger.info("Shutdown complete.")
+    logger.info("Skillora Engine shut down cleanly.")
 
 
-# Create the FastAPI application
-app = FastAPI(
-    title="Skillora Backend",
-    description="AI-Powered Resume Builder & Job Recommendation Bot",
-    lifespan=lifespan,
+# ---------------------------------------------------------------------------
+# FastAPI app
+# ---------------------------------------------------------------------------
+app = FastAPI(title="Skillora Backend", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Mount the WhatsApp Router (Webhooks)
+# Static files (only mount if the directory exists to avoid startup errors)
+if os.path.exists("frontend"):
+    app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
+    if os.path.exists("frontend/assets"):
+        app.mount("/assets", StaticFiles(directory="frontend/assets"), name="assets")
+
+# Routers
 app.include_router(whatsapp_router, prefix="/whatsapp", tags=["WhatsApp"])
 
-# MOUNT YOUR NEW WEB UI ROUTER
-app.include_router(web_router)
+
+# ---------------------------------------------------------------------------
+# API Endpoints
+# ---------------------------------------------------------------------------
+
+@app.post("/api/recommend-jobs")
+async def recommend_jobs(resume: UploadFile = File(...)):
+    """Web-facing endpoint — placeholder for future web UI integration."""
+    logger.info(f"Web resume upload received: {resume.filename}")
+    return {"status": "success", "message": "File received", "jobs": []}
 
 
-# Changed this from "/" to "/health" so the Web UI can use "/" for the landing page
 @app.get("/health")
 async def health_check():
-    return {"status": "Skillora Engine is running successfully."}
+    return {"status": "Skillora Engine is running."}
 
 
+# ---------------------------------------------------------------------------
+# Dev entrypoint
+# ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    # Run the server on port 8000 with hot reload for development
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

@@ -1,96 +1,100 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" data-theme="dark">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Contact Skillora — reach us via email, Telegram or GitHub for technical inquiries and repository access." />
     <title>Contact | Skillora</title>
-    <link rel="stylesheet" href="style.css">
-</head>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
 
-<body>
-
+  <body>
     <div class="layer-1-bg"></div>
     <div class="layer-2-stars"></div>
+    <div id="celestial-orb"></div>
     <canvas id="morphic-canvas"></canvas>
 
     <div class="app-wrapper">
-        <div class="glass-container">
+      <div class="glass-container page-scroll">
+        <nav>
+          <div class="brand-group">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+                 stroke="url(#purple-grad)" stroke-width="2.5">
+              <defs>
+                <linearGradient id="purple-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#7c5cff" />
+                  <stop offset="100%" stop-color="#a78bfa" />
+                </linearGradient>
+              </defs>
+              <path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13.5H5.5L12 6.5z" />
+            </svg>
+            <div class="brand-text">
+              <span class="brand-title">Skillora</span>
+              <span class="brand-tagline">AI Career Architect</span>
+            </div>
+          </div>
+          <div class="nav-actions">
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">☀️</button>
+            <a href="#" class="btn btn-outline">Login</a>
+            <a href="#" class="btn btn-primary">Register</a>
+          </div>
+        </nav>
 
-            <nav>
-                <div class="brand-group">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#purple-grad)"
-                        stroke-width="2.5">
-                        <linearGradient id="purple-grad">
-                            <stop offset="0%" stop-color="#7c5cff" />
-                            <stop offset="100%" stop-color="#a78bfa" />
-                        </linearGradient>
-                        <path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13.5H5.5L12 6.5z" />
-                    </svg>
-                    <div class="brand-text">
-                        <span class="brand-title">Skillora</span>
-                        <span class="brand-tagline">AI Career Architect</span>
-                    </div>
-                </div>
-                <div class="nav-actions">
-                    <button id="theme-toggle" class="theme-toggle">☀️</button>
-                    <a href="#" class="btn btn-outline">Login</a>
-                    <a href="#" class="btn btn-outline">Register</a>
-                </div>
-            </nav>
+        <main style="justify-content:flex-start">
+          <div style="display:flex;flex-direction:column;align-items:center;text-align:center;max-width:580px;margin:0 auto 56px auto">
 
-            <main style="justify-content: flex-start; padding-top: 40px;">
+            <!-- Page Hero -->
+            <div class="page-hero sr" style="width:100%;padding-bottom:0">
+              <h1 class="gradient-text">Initiate Contact</h1>
+              <p>
+                Reach out for technical details, repository access, or engineering inquiries
+                regarding the Skillora project.
+              </p>
+            </div>
 
-                <div
-                    style="display: flex; flex-direction: column; align-items: center; text-align: center; max-width: 600px; margin: 0 auto 60px auto;">
+            <div class="contact-links sr sr-delay-1">
+              <a href="mailto:mySkillora.bot@gmail.com" id="contact-email">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                mySkillora.bot@gmail.com
+              </a>
 
-                    <h1 class="gradient-text" style="font-size: 3rem; margin-bottom: 15px;">Initiate Contact</h1>
-                    <p style="color: var(--text-muted); font-size: 1.1rem;">Reach out for technical details, repository
-                        access, or engineering inquiries regarding the Skillora project.</p>
+              <a href="https://t.me/SkilloraBot" target="_blank" id="contact-telegram">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2">
+                  <path d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-18.6 7.21c-1.164.45-1.136 2.067.042 2.477l4.897 1.69 1.62 5.093c.176.55.845.717 1.25.313l3.22-3.175 4.965 3.996c.74.595 1.848.163 2.02-.756l3.5-18.6c.162-.862-.57-1.574-1.392-1.463h-.5z"/>
+                </svg>
+                @mySkilloraBot
+              </a>
 
-                    <div class="contact-links" style="width: 100%; max-width: 350px; margin-top: 40px;">
-                        <a href="mailto:rahul.sharma@example.com">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                                <polyline points="22,6 12,13 2,6" />
-                            </svg>
-                            mySkillora.bot@gmail.com
-                        </a><br>
-                        <a href="https://t.me/SkilloraBot" target="_blank">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path
-                                    d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-18.6 7.21c-1.164.45-1.136 2.067.042 2.477l4.897 1.69 1.62 5.093c.176.55.845.717 1.25.313l3.22-3.175 4.965 3.996c.74.595 1.848.163 2.02-.756l3.5-18.6c.162-.862-.57-1.574-1.392-1.463h-.5z" />
-                            </svg>
-                            @mySkilloraBot
-                        </a><br>
-                        <a href="https://github.com/G1-0129/Skillora" target="_blank">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path
-                                    d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
-                            </svg>
-                            Source Repository
-                        </a>
-                    </div>
+              <a href="https://github.com/Jeevankm29/Skillora" target="_blank" id="contact-github">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2">
+                  <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+                </svg>
+                Source Repository
+              </a>
+            </div>
+          </div>
 
-                </div>
+          <div class="bottom-ribbon">
+            <a href="index.html">Home</a>
+            <a href="about.html">About Us</a>
+            <a href="contact.html" class="active">Contact</a>
+            <a href="how-it-works.html">How it Works</a>
+          </div>
+        </main>
 
-                <div class="bottom-ribbon">
-                    <a href="index.html">Home</a>
-                    <a href="about.html">About Us</a>
-                    <a href="contact.html" class="active">Contact</a>
-                    <a href="how-it-works.html">How it Works</a>
-                </div>
-            </main>
-
-            <footer>&copy; 2026 Skillora AI. Engineered for the future.</footer>
-
-        </div>
+        <footer class="page-footer">&copy; 2026 Skillora AI. Engineered for the future.</footer>
+      </div>
     </div>
 
     <script src="script.js"></script>
-</body>
-
+  </body>
 </html>

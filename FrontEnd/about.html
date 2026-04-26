@@ -1,122 +1,142 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" data-theme="dark">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="About Skillora — meet the core team and learn about our mission to democratise AI-powered career intelligence." />
     <title>About | Skillora</title>
-    <link rel="stylesheet" href="style.css">
-</head>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
 
-<body>
-
+  <body>
     <div class="layer-1-bg"></div>
     <div class="layer-2-stars"></div>
+    <div id="celestial-orb"></div>
     <canvas id="morphic-canvas"></canvas>
 
     <div class="app-wrapper">
-        <div class="glass-container">
+      <div class="glass-container page-scroll">
+        <nav>
+          <div class="brand-group">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+                 stroke="url(#purple-grad)" stroke-width="2.5">
+              <defs>
+                <linearGradient id="purple-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#7c5cff" />
+                  <stop offset="100%" stop-color="#a78bfa" />
+                </linearGradient>
+              </defs>
+              <path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13.5H5.5L12 6.5z" />
+            </svg>
+            <div class="brand-text">
+              <span class="brand-title">Skillora</span>
+              <span class="brand-tagline">AI Career Architect</span>
+            </div>
+          </div>
+          <div class="nav-actions">
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">☀️</button>
+            <a href="#" class="btn btn-outline">Login</a>
+            <a href="#" class="btn btn-primary">Register</a>
+          </div>
+        </nav>
 
-            <nav>
-                <div class="brand-group">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#purple-grad)"
-                        stroke-width="2.5">
-                        <linearGradient id="purple-grad">
-                            <stop offset="0%" stop-color="#7c5cff" />
-                            <stop offset="100%" stop-color="#a78bfa" />
-                        </linearGradient>
-                        <path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13.5H5.5L12 6.5z" />
-                    </svg>
-                    <div class="brand-text">
-                        <span class="brand-title">Skillora</span>
-                        <span class="brand-tagline">AI Career Architect</span>
-                    </div>
+        <main class="main-about">
+
+          <!-- Page Hero -->
+          <div class="page-hero sr">
+            <h1><span class="gradient-text">About</span> Skillora</h1>
+            <p>We bridge engineering talent and global opportunity through deterministic AI — no noise, no black boxes.</p>
+          </div>
+
+          <!-- About + Mission cards -->
+          <div class="about-grid">
+            <div class="glass-card sr sr-delay-1">
+              <h2 class="gradient-text" style="font-size:1.6rem;margin-bottom:14px">About Skillora</h2>
+              <p>
+                Skillora is a state-of-the-art AI intelligence bot designed to bridge the
+                gap between engineering talent and global opportunities. By parsing
+                documents with unparalleled speed, we map your trajectory in real-time.
+              </p>
+            </div>
+
+            <div class="glass-card sr sr-delay-2">
+              <h2 class="gradient-text" style="font-size:1.6rem;margin-bottom:14px">Our Mission</h2>
+              <p>
+                We believe discovering the right career path shouldn't be a black box. Our
+                mission is to democratise career intelligence, providing instant,
+                deterministic job matching without the noise.
+              </p>
+            </div>
+          </div>
+
+          <!-- Team -->
+          <div class="sr">
+            <h2 class="section-heading">The Core Team</h2>
+            <div class="team-grid">
+
+              <div class="glass-card team-member sr sr-delay-1">
+                <div class="avatar" style="background-image:url('assets/Sai.jpg')"></div>
+                <h3>Sai Pujitha</h3>
+                <div class="role">Backend Engineer &amp; Documentation</div>
+                <p style="color:var(--text-muted);font-size:0.88rem">
+                  Designing robust APIs and optimising database querying for maximum speed.
+                </p>
+              </div>
+
+              <div class="glass-card team-member sr sr-delay-2">
+                <div class="avatar" style="background-image:url('assets/jeevan.jpg')"></div>
+                <h3>Jeevan</h3>
+                <div class="role">Lead Architect</div>
+                <p style="color:var(--text-muted);font-size:0.88rem">
+                  Building scalable asynchronous architectures and crafting modern digital experiences.
+                </p>
+              </div>
+
+              <div class="glass-card team-member sr sr-delay-3">
+                <div class="avatar" style="background-image:url('assets/vivek.jpg')"></div>
+                <h3>P Vivek</h3>
+                <div class="role">Testing &amp; Quality Assurance</div>
+                <p style="color:var(--text-muted);font-size:0.88rem">
+                  Developing the fuzzy matching engine and semantic skill extraction logic.
+                </p>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Mentor -->
+          <div style="margin-top:56px;margin-bottom:40px" class="sr">
+            <h2 class="section-heading">Our Mentor</h2>
+            <div class="glass-card mentor-card">
+              <div class="avatar"></div>
+              <div>
+                <h3 style="font-size:1.4rem;margin-bottom:5px">Dr. Example Mentor</h3>
+                <div class="role" style="color:var(--accent-1);font-weight:600;margin-bottom:10px">
+                  Project Guide &amp; Advisor
                 </div>
-                <div class="nav-actions">
-                    <button id="theme-toggle" class="theme-toggle">☀️</button>
-                    <a href="#" class="btn btn-outline">Login</a>
-                    <a href="#" class="btn btn-outline">Register</a>
-                </div>
-            </nav>
+                <p style="color:var(--text-muted)">
+                  Providing strategic technical direction and ensuring architectural best
+                  practices throughout the development of the Skillora platform.
+                </p>
+              </div>
+            </div>
+          </div>
 
-            <main
-                style="max-width: 1100px; margin: 0 auto; width: 100%; justify-content: flex-start; padding-top: 40px;">
+          <div class="bottom-ribbon" style="margin-top:auto">
+            <a href="index.html">Home</a>
+            <a href="about.html" class="active">About Us</a>
+            <a href="contact.html">Contact</a>
+            <a href="how-it-works.html">How it Works</a>
+          </div>
+        </main>
 
-                <div class="about-grid">
-                    <div class="glass-card">
-                        <h2 class="gradient-text" style="font-size: 2rem; margin-bottom: 15px;">About Skillora</h2>
-                        <p>Skillora is a state-of-the-art AI intelligence bot designed to bridge the gap between
-                            engineering talent and global opportunities. By parsing documents with unparalleled speed,
-                            we map your trajectory in real-time.</p>
-                    </div>
-
-                    <div class="glass-card">
-                        <h2 class="gradient-text" style="font-size: 2rem; margin-bottom: 15px;">Our Mission</h2>
-                        <p>We believe discovering the right career path shouldn't be a black box. Our mission is to
-                            democratize career intelligence, providing instant, deterministic job matching without the
-                            noise.</p>
-                    </div>
-                </div>
-
-                <div>
-                    <h2 style="font-size: 2rem; text-align: center; margin-bottom: 10px;">The Core Team</h2>
-                    <div class="team-grid">
-
-                        <div class="glass-card team-member">
-                            <div class="avatar"></div>
-                            <h3>Rahul Sharma</h3>
-                            <div class="role">Lead Architect</div>
-                            <p style="color: var(--text-muted); font-size: 0.9rem;">Building scalable asynchronous
-                                architectures and crafting modern digital experiences.</p>
-                        </div>
-
-                        <div class="glass-card team-member">
-                            <div class="avatar"></div>
-                            <h3>Team Member 2</h3>
-                            <div class="role">Backend Engineer</div>
-                            <p style="color: var(--text-muted); font-size: 0.9rem;">Designing robust APIs and optimizing
-                                database querying for maximum speed.</p>
-                        </div>
-
-                        <div class="glass-card team-member">
-                            <div class="avatar"></div>
-                            <h3>Team Member 3</h3>
-                            <div class="role">AI / ML Engineer</div>
-                            <p style="color: var(--text-muted); font-size: 0.9rem;">Developing the fuzzy matching engine
-                                and semantic skill extraction logic.</p>
-                        </div>
-
-                    </div>
-                </div>
-
-                <div style="margin-top: 60px; margin-bottom: 50px;">
-                    <h2 style="font-size: 2rem; text-align: center; margin-bottom: 10px;">Our Mentor</h2>
-                    <div class="glass-card mentor-card">
-                        <div class="avatar"></div>
-                        <div>
-                            <h3 style="font-size: 1.5rem; margin-bottom: 5px;">Dr. Example Mentor</h3>
-                            <div class="role" style="color: var(--accent-1); font-weight: 600; margin-bottom: 10px;">
-                                Project Guide & Advisor</div>
-                            <p style="color: var(--text-muted);">Providing strategic technical direction and ensuring
-                                architectural best practices throughout the development of the Skillora platform.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bottom-ribbon">
-                    <a href="index.html">Home</a>
-                    <a href="about.html" class="active">About Us</a>
-                    <a href="contact.html">Contact</a>
-                    <a href="how-it-works.html">How it Works</a>
-                </div>
-            </main>
-
-            <footer>&copy; 2026 Skillora AI. Engineered for the future.</footer>
-
-        </div>
+        <footer class="page-footer">&copy; 2026 Skillora AI. Engineered for the future.</footer>
+      </div>
     </div>
 
     <script src="script.js"></script>
-</body>
-
+  </body>
 </html>
